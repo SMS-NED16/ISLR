@@ -8,13 +8,13 @@ The exercises and examples from the Deep Learning Chapter have been implemented 
 
 ## Table of Contents 
 | Chapter No.   | Chapter Title | Examples  | Exercises  | 
-|:-------------:|:------------- |:-------:  |            |
-| 2             | Statistical Learning|[Code]("./code/02_lab_rmd.Rmd)|[HTML](".html/02_exercsises.html")]
-| 3             | Linear Regression|[]()|[]()]
-| 4             | Classification|[]()|[]()]
-| 5             | Resampling Methods|[]()|[]()]
-| 6             | Linear Model Selection & Regularization|[]()|[]()]
-| 7             | Moving Beyond Linearity|[]()|[]()]
-| 8             | Tree-Based Methods|[]()|[]()]
-| 9             | Support Vector Machines|[]()|[]()]
-| 10            | Deep Learning|[]()|[]()]
+|:-------------:|:------------- |:-------:  |:----------: |
+| 2             | Statistical Learning|[Code]("./code/02_lab_rmd.Rmd)|[HTML](".html/02_exercsises.html")|
+| 3             | Linear Regression|[]()|[]()|
+| 4             | Classification|[]()|[]()|
+| 5             | Resampling Methods|[]()|[]()|
+| 6             | Linear Model Selection & Regularization|[]()|[]()|
+| 7             | Moving Beyond Linearity|[]()|[]()|
+| 8             | Tree-Based Methods|[]()|[]()|
+| 9             | Support Vector Machines|[]()|[]()|
+| 10            | Deep Learning|[]()|[]()|
