@@ -1,0 +1,823 @@
+---
+title: "ISLR - Chapter 08 - Exercises"
+author: "Saad M. Siddiqui"
+date: "4/9/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+rm(list = ls())
+knitr::opts_chunk$set(echo = TRUE)
+library(ISLR2)
+library(tree)
+library(randomForest)
+library(gbm)
+library(BART)
+library(glmnet)
+library(dplyr)
+library(ggplot2)
+```
+
+# Conceptual Exercises 
+## Exercise 01 - Partitioning Feature Spaces
+**Draw an example of a partition of two-dimensional feature space that could result from recursive binary splitting. Your example should contain at least six regions. Draw a decision tree corresponding to this partition. Be sure to label all aspects of your figures, including the regions $R_1, R_2, ...$, the cutpoints $t_1, t_2, ...,$ and so forth.**
+
+I'm assuming there are two predictions $X_1 \in [1, 10]$ and $X_2 \in [-0.5, 0.5]$. 
+The imaginary regions and cutpoints I am defining are as follows:
+
+- $R_1 = \{X|X_1 \leq 2\}$
+
+- $R_2: \{X|X_1 \in (2, 6]\}, \{X|X_2 \in [-0.5, 0)\}$
+
+- $R_3: \{X|X_1 \in (2, 6]\}, \{X|X_2 \in [0, 0.5]\}$
+
+- $R_4: \{X|X_1 \in (6, 10]\}, \{X|X_2\ \leq -0.1\}$
+
+- $R_5: \{X|X_1 \in (6, 10]\}, \{X|X_2\ \in (-0.1, 0.1]\}$
+
+- $R_6: \{X|X_1 \in (6, 10]\}, \{X|X_2\ > 0.1\}$
+
+Generating a plot with these regions.
+```{r}
+my.predictor.space <- expand.grid(seq(1,10, 0.01), seq(-0.5, 0.5, 0.01))
+my.predictor.space.df <- data.frame(
+  x_1 = my.predictor.space$Var1, 
+  x_2 = my.predictor.space$Var2
+)
+
+my.predictor.space.df <- my.predictor.space.df %>% 
+  dplyr::mutate(region = dplyr::case_when(
+  x_1 <= 2 ~ 'R_1', 
+  x_1 > 2 & x_1 <= 6 & x_2 >= -0.5 & x_2 < 0 ~ 'R_2',
+  x_1 > 2 & x_1 <= 6 & x_2 >= 0 & x_2 <= 0.5 ~ 'R_3',
+  x_1 > 6 & x_1 <= 10 & x_2 < -0.1 ~ 'R_4', 
+  x_1 > 6 & x_1 <= 10 & x_2 >= -0.1 & x_2 <= 0.1 ~ 'R_5', 
+  x_1 > 6 & x_1 <= 10 & x_2 > 0.1 ~ 'R_6'
+))
+
+my.predictor.space.df %>% ggplot(aes(x = x_1, y = x_2)) + 
+  geom_point(aes(col = region))
+```
+
+The corresponding decision tree is shown below.
+![Decision Tree](./01_example_space.drawio.png)
+
+## Exercise 02 - Boosting, Tree Stumps, and Additive Models 
+**It is mentioned in Section 8.2.3 that boosting using depth-one trees (or stumps) leads to an *additive* model: that is the model of the form**
+$$
+\hat{f(X)} = \sum_{j = 1}^{p}f_j(X_j)
+$$
+
+**Explain why this is the case. You can begin with the algorithm 8.2**
+
+When the number of splits in each decsion tree $d$ is 1, a tree is actually a **stump**. When we ensemble several such stumps in a boosting algorithm, several such stumps are trained sequentially. Each stump is fit not to the training data, but rather the residuals of the previous stump on the training data. And the aggregation of several such predictions leads to the boosting prediction.
+
+The aggregation is additive because 
+1. we are adding predictions from the $\b^{th}$ stump where $b \in [1, B]$
+2. the $b^{th}$ stump itself can be modeled as a simple piecewise $f(X)$ which is additive in nature. 
+
+
+An individual decision tree's hypothesis function can be expressed as 
+$$
+f(X) = \sum_{m = 1}^{M}c_m.1_{(X\in R_m)}
+$$
+where $c_m$ is the mean response for the terminal node $m$. 
+
+When we train a decision stump with only two nodes (and one predictor), this becomes equivalent to 
+$$
+f(X) = c_1.1_{(X \in R_1)}+ c_2.1_{(X \in R_2)}
+$$
+which means there are only two regions and and two terms in the hypothesis function.
+
+Assuming the split occurs at cutpoint $s$, we can write this hypothesis function as a piecewise linear function
+$$
+\begin{align}
+\hat{f^b(X)} &= c_1 \ \forall X_j < s \\
+\hat{f^b(X)} &= c_2 \ \forall X_j \geq s \\
+\hat{f^b(X)} &= c_1.I(X< s) + c_2.I(X \geq s)
+\end{align}
+$$
+In gradient boosting, $B$ such hypothesis functions are fit sequentially to the residual from the previous iteration. Concretely, at the first iteration, we set $\hat{f(X)} = 0$ and $r_i = y_i \ \forall i \in {1, 2, 3, ...n}$. 
+
+$$
+\begin{align}
+\hat{f^1(X)} &= c_{11}.I(X< s_1) + c_{12}.I(X \geq s_1) \\
+\hat{f(X)} &= \hat{f(X)} + \lambda\hat{f^1(X)} \\ 
+\because \hat{f(X)} &= 0 \\
+\therefore \hat{f(X)} &= \lambda \hat{f^1(X)} \\
+\text{and in same iteration fit to residual} \\
+r_i &= r_i - \lambda \hat{f^1(X)} \\ 
+\because r_i &= y_i \\
+\therefore r_i &= r_i - \lambda \hat{f^1(X)} \\ 
+\end{align}
+$$
+
+The next tree will be follow the same process, but now $\hat{f(X)}$ has been initialized to a non-zero value from the previous iteration. Extending this process to $B$ iterations (1 per gradient boosted stump), 
+$$
+\begin{align}
+\hat{f^B(X)} &= c_{B1}.I(X < s_b) + c_{B2}.I(X \geq s_b) \\
+\hat{f_{new}(X)} &= \lambda \hat{f^1(X)} + \lambda \hat{f^2(X)} + \lambda \hat{f^3(X)} + ... + \lambda \hat{f^B(X)} \\ 
+\hat{f(X)} &= \sum\limits_{b = 1}^{B}\lambda \hat{f^b(X)}\\
+\text{which means, for residual fitting} \\
+r_i &= y_i - \sum\limits_{b = 1}^{B}\lambda \hat{f^b(X)}\\
+\end{align}
+$$
+
+Which makes the final version of the boosted model equal to 
+$$
+\begin{align}
+\hat{f(X)} &= \sum\limits_{b = 1}^{B}\lambda\hat{f^b}\\
+\hat{f(X)} &= \lambda \sum\limits_{b = 1}^{B}c_{b1}.I(X < s_b) + c_{b2}.I(X \geq s_b)
+\end{align}
+$$
+Comparing this to the original form of the additive model
+
+$$\hat{f(X)} = \sum_{j = 1}^{p}f_j(X_j)$$
+We can see that $f_j(X_j)$ is just the addition of $\lambda.c_{b1} + \lambda.c_{b2}$ for all predictors for each $b \in \{1, 2, 3, ..., B\}$.
+
+## Exercise 03 - Gini Index
+**Consider the Gini index, classification error, and entropy in a simple classification setting with two classes. Create a single plot that displays each of these quantities as a function of $\hat{p_{m1}}$. The $x$-axis should display $\hat{p_{m1}}$, ranging from 0 to 1, and the $y$-axis should display the value of Gini index, classification error, and entropy.**
+
+**In a setting with two classes $\hat{p_{m1}} = 1 - \hat{p_{m2}}$.**
+
+$\hat{p_{m1}}$ is the proportion of records in terminal node $m$ of tree that belong to class $1$. 
+
+In setting with two classes, $p_{m1} = 1 - \hat{p_{m2}}$.
+
+The classification error is the complement of accuracy. Accuracy itself is the proportion of records classified correctly. In node $m$, a tree will predict the majority class for every data point that passes the predicate for node $m$. This means the error will be for all data points that don't belong to the majority class within that node. Concretely, 
+$$
+E_{classification} = 1 - \underset{k}{max}(\hat{p_{mk}})
+$$
+
+The Gini impurity in any given node is given by 
+$$
+\begin{align}
+G &= \sum_{k = 1}^{2}\hat{p_{mk}}(1 - \hat{p_{mk}}) \\
+G &= \hat{p_{m1}}(1 - \hat{p_{m1}}) + \hat{p_{m2}}(1 - \hat{p_{m2}})
+\end{align}
+$$
+
+The entropy in node $m$ is similar, but uses a log term in the sum 
+$$
+\begin{align}
+D &= -1 \times \sum\limits_{k = 1}^{K}\hat{p_{mk}}{log(\hat{p_{mk}})} \\
+D &= -\hat{p_{m1}} log(\hat{p_{m1}}) - \hat{p_{m2}}log(\hat{p_{m2}})
+\end{align}
+$$
+
+Sketching the variation of these expressions for a sample node
+```{r}
+prop.class.01 <- seq(0, 1, 0.01)
+prop.class.02 <- 1 - prop.class.01
+
+my.err.df <- data.frame(prop_class_01 = prop.class.01, prop_class_02 = prop.class.02) %>% 
+  dplyr::rowwise() %>% 
+  dplyr::mutate(
+    err_class = 1 - max(prop_class_01, prop_class_02)
+  ) %>% 
+  dplyr::mutate(
+    err_gini = prop_class_01 * (1 - prop_class_01) + prop_class_02 * (1 - prop_class_02),
+    err_entropy = -1 * prop_class_01 * log(prop_class_01) - 1 * prop_class_02 * log(prop_class_02)
+  )
+
+my.err.df %>% data.table::melt(id.vars = c('prop_class_01', 'prop_class_02')) %>% 
+  ggplot(aes(x = prop_class_01, y = value, color = variable, group = variable)) + 
+  geom_line() + 
+  labs(x = 'Proportion of Class 01', y = 'Error', title = 'Classification Tree Errors in node m for different proportions of Class 01')
+
+```
+
+Some observations
+- error is maximum when there is a 50-50 split between the classes in each node. 
+
+- error is minimum when there is only one class in the node (regardless of which class that may be).
+
+- all error functions are symmetric about the point where all classes are distributed equally within the node. 
+
+- classification error increases linearly, whereas gini impurity and entropy vary non-linearly. Only gini and entropy seem to be differentiable at point of symmetry.
+
+- across all proportions, entropy places the maximum penalty for having more than one class present, followed by gini impurity and then classification errr. 
+
+
+## Exercise 04 - Sketching Decision Trees
+**This question relates to the trees displayed in figure 8.14**.
+## Part (a) 
+**Sketch the tree corresponding to the partition of the predictor space illustrated in the left-hand panel of the Figure. The numbers inside the boxes indicate the mean of $Y$ within each region.**
+
+![Decision Tree for 4(a)](./02_ex_04_part_a_tree_from_space.drawio.png)
+
+## Part (b)
+**Create a diagram similar to the left-hand panel using the tree illustrated in the right-hand panel. You should divide up the predictor space into the correct regions, and indicate the mean for each region.**
+
+```{r}
+x1 <- seq(-3, 3, 0.01)
+x2 <- seq(-3, 3, 0.01)
+x.grid <- expand.grid(x1, x2)
+my.predictor.space.df <- data.frame(
+  x1 = x.grid$Var1, 
+  x2 = x.grid$Var2
+)
+
+my.predictor.space.df <- my.predictor.space.df %>% dplyr::mutate(
+  region = dplyr::case_when(
+    x2 < 1 & x1 < 1 ~ 'Region_01 (-1.80)', 
+    x2 < 1 & x1 >= 1 ~ 'Region_02 (0.63)', 
+    x2 >= 2 ~ 'Region_03 (2.49)', 
+    x2 >= 1 & x2 < 2 & x1 < 0 ~ 'Region_04 (-1.06)',
+    x2 >= 1 & x2 < 2 & x1 >= 0 ~ 'Region_05 (0.21)'
+  )
+)
+
+my.predictor.space.df %>% 
+  ggplot(aes(x = x1, y = x2, color = region)) + 
+  geom_point() + 
+  labs(x = 'X1', y = 'X2', title = 'Feature Space Partitions for Decision Tree 4b')
+```
+
+
+## Exercise 05 - Bootstrapping for Classification Trees
+**Suppose we produce ten bootstrapped samples from a data set containing red and green classes. we then apply a classification tree to each bootstrapped sample and, for a specific value of $X$, produce 10 estimates of $P(Class is Red|X)$.**
+$$
+0.1, 0.15, 0.2, 0.2, 0.55, 0.6, 0.6, 0.65, 0.7, 0.75
+$$
+
+**There are two common ways to combine these results together into a single class prediction. One is the majority vote approach discussed in this chapter. The second pparoach is to classify based on the average probability. In this example, what is the final classification under each of these two appraoches?**
+
+```{r}
+bootstrapped.probs <- c(0.1, 0.15, 0.2, 0.2, 0.55, 0.6, 0.6, 0.65, 0.7, 0.75)
+binomialized.labels.red <- bootstrapped.probs > 0.5 
+average.prob <- mean(bootstrapped.probs)
+majority.vote <- ifelse(mean(binomialized.labels.red) > mean(1 - binomialized.labels.red), 'Red', 'Green')
+average.vote <- ifelse(average.prob > 0.5, 'Red', 'Green')
+
+print(paste0("The majority vote is for class ", majority.vote))
+print(paste0("The average probability vote is for class ", average.vote))
+
+
+```
+
+
+## Exercise 06 - Regression Tree Algorithm
+**Provde a detailed explanation of the algorithm that is used to fit a regression tree.**
+
+Assume we have a set of predictors $X = \{X_1, X_2, X_3, ..., X_j\}$ and a continuous target $Y$.
+
+A regression tree uses a top-down, greedy approach to recursively partition the feature space into non-overlapping regions or boxes made using decision boundaries or cutpoints $s$ parallel to the feature axes/dimensions i.e. orthogonal splits.
+
+Concretely, at each node $m$ in the tree, we iterate over all the features in $X$ and for each feature, try to find a cutpoint $s$ that divides the training data into two regions: $R_1 = \{X|X_j < s\}$ and $R_2 = \{X|X_j \geq s\}$ subject to the requirement that we choose $(s, j)$ 
+such that it minimise the residual sum of squares (RSS) for all training examples that pass the predicate for that node. Concretely, this means minimisng 
+$$
+\begin{align}
+ RSS &= \sum\limits_{i: x_i\in R_{m}}(y_i - \hat{y_R})^2 \\
+ \end{align}
+$$
+Where $\hat{y_i}$ is the prediction for node $m$, which, in turn, is equal to the mean of the response for all training examples that lie within that node.
+$$
+\hat{y_R} = \frac{1}{\sum(I_{x_i \in R})}\sum\limits_{i: x_i \in R}{y_i}
+$$
+
+For numeric features, we iterate over all possible values of the feature as cutpoints for partitioning.
+
+For categorical features, we iterate over every possible categorical value or combination of categorical values to split the feature space into two regions.
+
+This is a greedy process because the algorithm only chooses a feature and cutpoint that minimises the RSS of 
+
+We repeat this process recursively for each node until some stopping criteria is reached (maximum tree depth, no node having more than a specified number of examples to split, etc.).
+
+However, this process can often lead to very overfit trees, and so the next step in tree fitting usually involves **cost-complexty pruning**. Specifically, for an overfit tree $T_0$, we use a cost-complexity parameter $\alpha$ that tries to find a subtree $T$ of the original overfit tree $T_0$ to minimise
+$$
+g(\alpha) = \sum\limits_{m = 1}^{|T|}\sum\limits_{x_i \in R_m}(y_i - \hat{y_{R_m}})^2  + \alpha|T|
+$$
+
+Here, $|T|$ is the number of leaf nodes in the tree $T$.
+
+When $\alpha$ is 0, this is equivalent to finding the RSS for the original tree. But as $\alpha \rightarrow \infty$, the penalty associated with having more nodes in the tree becomes significant. So there is an incentive to minimize the RSS and a competing incentive to do so with as small or simple a subtree as possible.
+
+Very often, this process is combined with cross-validation to find the optimal value of $\alpha$. For a grid of $\alpha$ values, we 
+1. grow a completely overfit tree on $K - 1$ folds of the training data.
+2. evaluate the MSE on the remaining fold (the outsample data)
+3. find the value of $\alpha$ which minimizes the outsample MSE.
+
+The end result is a tree that has been pruned sufficiently to ensure lowest MSE or lowest RSS on cross-validated data.
+
+# Applied Exercises
+## Exercise 07 - Random Forests for `Boston` 
+**In the lab, we applied random forests to the `Boston` data using `mtry = 6` and using `ntree = 25` and `ntree = 500`. Create a plot displaying the test error resulting from random forests on this data set for a more comprehensive range of values for `mtry` and `ntree`.**
+```{r}
+# Make a training and test set 
+set.seed(163)
+boston.train.idx <- sample(1:nrow(Boston), nrow(Boston) * 0.7)
+boston.test.idx <- (-boston.train.idx)
+boston.x.train <- Boston[boston.train.idx, -13]
+boston.x.test <- Boston[boston.test.idx, -13]
+boston.y.train <- Boston[boston.train.idx, 'medv']
+boston.y.test <- Boston[boston.test.idx, 'medv']
+
+# Defiine the grid of hyperparameter values for which to train models
+grid.ntree <- c(seq(10, 90, 10), seq(100, 1000, 100))
+grid.mtry <- c(1:12)
+
+# Make lists to store results of each iteration
+results.ntree <- list()
+results.mtry <- list()
+
+# Iterate over trees first 
+for (n.tree in grid.ntree) {
+  message(Sys.time(), "\tFitting RF for n.tree = ", n.tree)
+  my.rf <- randomForest(
+    medv ~ ., data = Boston, subset = boston.train.idx, 
+    ntree = n.tree, mtry = 4
+  )
+  
+  my.rf.pred <- predict(my.rf, newdata = Boston[boston.test.idx, ])
+  my.rf.mse.test <- mean((my.rf.pred - boston.y.test)^2)
+  
+  results.ntree[[as.character(n.tree)]] <- my.rf.mse.test
+}
+
+# Iterate over the number of variables to try 
+for (m.try in grid.mtry){
+  message(Sys.time(), "\tFitting RF for mtry = ", m.try)
+  my.rf <- randomForest(
+    medv ~ ., data = Boston, subset = boston.train.idx, mtry = m.try,
+    ntree = 100
+  )
+  my.rf.pred <- predict(my.rf, newdata = Boston[boston.test.idx, ])
+  my.rf.mse.test <- mean((my.rf.pred - boston.y.test)^2)
+  
+  results.mtry[[as.character(m.try)]] <- my.rf.mse.test
+}
+
+# Plot the results 
+ntree.plot <- data.frame(n_trees = grid.ntree, test_mse = unlist(unname(results.ntree))) %>% 
+  ggplot(aes(x = n_trees, y = test_mse)) + 
+  geom_line() + geom_point() + labs(x = 'Number of Trees', y = 'Test MSE', title = 'Boston RF - Test MSE against Number of Trees')
+
+mtry.plot <- data.frame(m_try = grid.mtry, test_mse = unlist(unname(results.mtry))) %>% 
+  ggplot(aes(x = factor(m_try), y = test_mse, group = 'm_try')) + 
+  geom_line() + geom_point() + labs(x = 'Number of Variables for Splitting', y = 'Test MSE', title = 'Boston RF - Test MSE against number of candidate variables')
+
+cowplot::plot_grid(plotlist = list(ntree.plot, mtry.plot), nrow = 2)
+```
+
+This is an interesting set of plots. The minimum test error is for 30 or 50 trees, not ~500 trees, even though the variance of an ensemble of 50 trees is much larger than that of 500 or 1000 trees. I expected a continuous decrease in test MSE with increase in the numbr of trees. There are also seems to be some numerical instability associated with ensembles of 20 and 40 trees, as they have higher test MSEs than the rest.
+
+The plot of test MSE against number of variables used tells a more consistent and intuitive story. Test MSE decreases as we go from 1 predictor to 10 predictors, and then increasees. At 12 predictors, we are essentially doing bagging, which results in very correlated predictors. With $p = 10$, it looks like we have the best configuration for decreasing variance and decorrelating errors.
+
+## Exercise 08 - `Carseats` Regression
+**In the lab, a classification tree was applied to the `Carseats` data set after convertng `Sales` into a qualitative response variable. Now we will seek to predict `Sales` using regression trees and related approaches, treating the response as a quantitative variable.**
+
+## Part (a)
+**Split that data into a training and test set.**
+```{r}
+set.seed(163)
+carseats.train.idx <- sample(1:nrow(Carseats), nrow(Carseats) * 0.7)
+carseats.test.idx <- (-carseats.train.idx)
+```
+
+## Part (b)
+**Fit a regression tree to the training set. Plot the tree, and interpret the results. What test MSE do you obtain?**
+```{r}
+# Fit the tree
+reg.tree.carseats <- tree(Sales ~ ., data = Carseats, subset = carseats.train.idx)
+
+# Check training summary
+summary(reg.tree.carseats)
+
+# Get predictions and check test error
+reg.tree.carseats.pred <- predict(reg.tree.carseats, newdata = Carseats[carseats.test.idx,])
+reg.tree.carseats.mse <- mean(
+  (reg.tree.carseats.pred - Carseats[carseats.test.idx, ]$Sales)^2
+)
+print("Test Set MSE:\n")
+print(reg.tree.carseats.mse)
+
+# Plot the tree 
+plot(reg.tree.carseats)
+text(reg.tree.carseats, pretty = 0)
+
+# How many leaf nodes?
+print("Total Number of Leaf Nodes:\n")
+reg.tree.carseats$frame[reg.tree.carseats$frame$var == '<leaf>', ] %>% nrow()
+```
+
+The training MSE is 2.55, whereas the test MSE is 4.9, which is clear evidence of overfitting. This tree has not been pruned in any way, and is probably more granular than it needs to be. `ShelveLoc` seems to be the most important predictor, followed by `Price`. Not all variables are actually used in tree construction e.g. `Education`, `Urban`, and `US` are not used in the tree at all. 
+
+## Part (c) 
+**Use cross-validation in order to determine the optimal level of tree complexity. Does pruning the tree improve the test MSE?**
+```{r}
+cv.reg.tree.carseats <- cv.tree(reg.tree.carseats, K = 10)
+cv.reg.tree.carseats.df <- data.frame(tree_size = cv.reg.tree.carseats$size, 
+                                      tree_err = cv.reg.tree.carseats$dev)
+plot(cv.reg.tree.carseats.df$tree_size, 
+     cv.reg.tree.carseats.df$tree_err, 
+     type = 'b',
+     xlab = 'Tree Size', ylab = 'Xval RSS', 
+     main = 'Carseats - Cross-validated RSS against Tree Size')
+points(cv.reg.tree.carseats.df$tree_size[which.min(cv.reg.tree.carseats$dev)], 
+       min(cv.reg.tree.carseats$dev), 
+       col = 'red', cex = 2, pch = 20)
+```
+
+Cross-validation shows that the best tree is actually the one with 15 nodes, although we may want to use 13 nodes based on the 1 SE rule. So technically the original tree we fit in part (a) was the best tree, and doesn't necessarily seem to be overfitting.
+
+Just for practice, I am still going to write code to train a tree using the results from `cv.tree`.
+
+```{r}
+pruned.reg.tree.carseats <- prune.tree(tree = reg.tree.carseats, best = 15)
+
+pruned.tree.carseats.pred <- predict(
+  pruned.reg.tree.carseats,
+  newdata = Carseats[carseats.test.idx,]
+)
+
+pruned.tree.carseats.mse <- mean(
+  (pruned.tree.carseats.pred - Carseats[carseats.test.idx, ]$Sales)^2
+)
+print("Test Set MSE:\n")
+print(pruned.tree.carseats.mse)
+
+```
+
+
+## Part (d) 
+**Use the bagging approach in order to analye this data. What test MSE do you obtain? Use the `importance` function to determine which variables are most important. Describe the effect of $m$, the number of variables considered at each split, on the error rate obtained.**
+
+Bagging can be done with the `randomForest` API using `mtry` = number of predictors in the entire data set. 
+```{r}
+# First, fit a simple bagging predictor and get the feature importance as well
+# Important to use mtry to specify that all predictors must be used
+bagging.carseats <- randomForest(
+  Sales ~., data = Carseats, subset = carseats.train.idx, importance = TRUE, mtry = 10
+)
+bagging.carseats
+
+# What is the test MSE with this predictor 
+bagging.carseats.pred <- predict(bagging.carseats, newdata = Carseats[carseats.test.idx, ])
+bagging.carseats.mse <- mean((bagging.carseats.pred - Carseats[carseats.test.idx, ]$Sales)^2)
+print(bagging.carseats.mse)
+# What is the feature importance?
+varImpPlot(bagging.carseats)
+```
+The test MSE is 2.60, which is much lower than that of single cross-validated decision tree. The model is still somewhat interpretable in that its feature importance plots give us an insight into the how the ensemble has been constructed: `Price` and `ShelveLoc` are still important features.
+
+## Part (e) 
+**Now analyze the data using BART, and report your results.**
+```{r}
+# Make data.frames or lists of predictors and response for train and test set 
+carseats.train.x <- Carseats[carseats.train.idx, -1]
+carseats.train.y <- Carseats[carseats.train.idx,]$Sales
+carseats.test.x <- Carseats[carseats.test.idx, -1]
+carseats.test.y <- Carseats[carseats.test.idx,]$Sales
+
+# Seed random number generator and pass to BART 
+set.seed(163)
+bart.carseats.fit <- gbart(carseats.train.x, carseats.train.y, x.test = carseats.test.x)
+
+# Check test set performance 
+bart.carseats.pred <- bart.carseats.fit$yhat.test.mean
+bart.carseats.mse <- mean((carseats.test.y - bart.carseats.pred)^2)
+print(paste0("Test set MSE is: ", round(bart.carseats.mse, 3)))
+
+# Are variable frequency results consistent with other methods
+bart.carseats.ordered.predictors <- order(bart.carseats.fit$varcount.mean, decreasing = T)
+bart.carseats.fit$varcount.mean[bart.carseats.ordered.predictors]
+```
+
+Test MSE is much lower than that of a pruned decision tree, a random forest, and a gradient boosted tree. 
+
+Feature frequency is different from the ones we've seen before, but it's not an apples-to-apples comparison as feature importance in other methods is derived from RSE reduction brought about by using a variable as a split, whereas these results just show the average number of times a feature was used in a split in an ensemble. 
+
+The two numbers are correlated, but not exactly the same. 
+
+We see hre that while `Price` is still an important variable, so is `CompPrice`.
+
+## Exercise 09 - `OJ` Data Set 
+**This problem involves the `OJ` data set.**
+### Part (a)
+**Create a training set containing a random sample of 800 observations, and a test set containing the remaining observations.**
+```{r}
+set.seed(163)
+oj.train.idx <- sample(1:nrow(OJ), 800)
+oj.test.idx <- (-oj.train.idx)
+```
+
+
+### Part (b)
+**Fit a tree to the training data with `Purchase` as the response and the other variables as predictors. Use the `summary` function to produce summary statistics about the tree, and describe the results obtained. What is the training error rate? How many terminal nodes does the tree have?**
+```{r}
+oj.tree.fit <- tree(Purchase ~., data = OJ, subset = oj.train.idx)
+summary(oj.tree.fit)
+```
+The training error rate is 0.1462 and the number of terminal nodes is 8 
+
+Doesn't seem to be a very complex tree, and only a few variables are being used in tree construction. 
+
+### Part (c) 
+**Type in the name of the tree object in order to get a detailed text output. Pick one of the terminal nodes and interpret the information displayed.**
+```{r}
+# Print the tree object
+oj.tree.fit
+```
+Each node marked with a `*` is a terminal node. Here I analyse the following node:
+`7) LoyalCH > 0.764572 262   84.93 CH ( 0.96183 0.03817 ) *`
+
+This means there are 278 elements in the node, it has deviance of 85.39, its majority class or prediction is `CH` and that there is 96.2%-3.7% split between the `CH` and `MM` classes among the samples within this node.
+
+More specifcally, we arrive at this node by `LoyalCH > 0.51 and LoyalCH > 0.7645` predicate.
+
+### Part (d)
+**Create a plot of the tree, and interpret the results.**
+```{r}
+plot(oj.tree.fit)
+text(oj.tree.fit, pretty = 0)
+```
+
+`LoyalCH` is consistently he most important predictor, as it used at the the root node and also at levels 1 and 2 in the tree, and again at leaf nodes. 
+
+`PriceDiff` also seems to be a relatively important predictor.
+
+Generally, customers seem to buy brands that they have historically bought before or have been loyal to. The only case when this doesn't occur is when there are price changes.
+
+### Part (e)
+**Predict the response on the test data, and produce a confusion matrix comparing the test lables to the predicted test labels. What is the test error rate?**
+```{r}
+oj.tree.pred <- predict(oj.tree.fit, newdata = OJ[oj.test.idx, ], type = 'class')
+table(oj.tree.pred, OJ[oj.test.idx, ]$Purchase)
+mean(oj.tree.pred == OJ[oj.test.idx, ]$Purchase)
+```
+80% test set accuracy, which translates to a 20% test error rate.
+
+### Part (f)
+**Apply the `cv.tree()` function to the training set in order to determine the optimal tree size.**
+```{r}
+oj.cv.tree.fit <- cv.tree(oj.tree.fit, K = 10, FUN = prune.misclass)
+oj.cv.tree.fit
+```
+
+
+### Part (g) 
+**Produce a plot with tree size on the $x$-axis and cross-validated classification error rate on the $y$-axis.**
+```{r}
+data.frame(size = oj.cv.tree.fit$size, dev = oj.cv.tree.fit$dev
+) %>% 
+  ggplot(aes(x = size, y = dev)) + geom_point() + geom_line() + 
+  labs(x = 'Tree Size', y = 'Deviance', title = 'OJ - Cross-validated Deviance against Tree Size')
+```
+
+### Part (h)
+**Which tree size corresponds to the lowest cross-validated classification error rate?**
+
+Trees with 7 or 8 nodes.
+
+### Part (i)
+**Produce a pruned tree corresponding to the optimal tree size obtained using cross-validation. If cross-validation does not lead to selection of a pruned tree, then create a pruned tree with five terminal nodes.**
+```{r}
+oj.tree.fit.pruned <- prune.tree(tree = oj.tree.fit, best = 7)
+```
+
+
+### Part (j)
+**Compare the training error rates between the pruned and unpruned trees. Which is higher?**
+```{r}
+# Print training error rate of the unpruned tree
+summary(oj.tree.fit)
+
+# Do the same for the pruned tree
+summary(oj.tree.fit.pruned)
+```
+
+Both trees have identical misclassificatione error rates although the 8-node tree has a slightly lower residual mean deviance. 
+
+### Part (k)
+**Compare the test error rates between the pruned and unpruned trees. Which is higher?**
+```{r}
+oj.tree.fit.test.err <- mean(
+  predict(oj.tree.fit, newdata = OJ[oj.test.idx, ], type = 'class') 
+  != OJ[oj.test.idx, ]$Purchase
+)
+
+oj.tree.pruned.fit.test.err <- mean(
+  predict(oj.tree.fit.pruned, newdata = OJ[oj.test.idx, ], type = 'class') 
+  != OJ[oj.test.idx, ]$Purchase
+)
+
+print(paste0("Unpruned Tree Test MSE:", round(oj.tree.fit.test.err, 4)))
+print(paste0("Pruned Tree Test MSE:", round(oj.tree.pruned.fit.test.err, 4)))
+```
+
+Both have almost identical test set errors. 
+
+## Exercise 10 - Boosting with `Hitters` Data Set
+**We now use boosting to predict `Salary` in the `Hitters` data set.**
+### Part (a) 
+**Remove the observations for whom the salary information is unknown, and then log transform the salaries.**
+```{r}
+hitters.cleaned <- Hitters[!is.na(Hitters$Salary),]
+hitters.cleaned$Salary <- log(hitters.cleaned$Salary)
+plot(density(hitters.cleaned$Salary))
+```
+
+### Part (b) 
+**Create a training set consisting of the first 200 observatons and a test set consisting of the remaining observations.**
+```{r}
+hitters.train <- hitters.cleaned[1:200,]
+hitters.test <- hitters.cleaned[201:nrow(hitters.cleaned),]
+```
+
+### Part (c)
+**Perform boosting on the training set with 1000 trees for a range of values of the shrinkage parameter $\lambda$. Produce a plot with different shrinkage values on the $x-axis$ and the corresponding training set MSE on the $y$-axis.**
+```{r}
+set.seed(163)
+shrinkage.grid <- 10^seq(-6, 0, 0.1)
+shrinkage.results <- list()
+
+for (shrinkage.param in shrinkage.grid){
+  my.gbm <- gbm(Salary ~ ., data = hitters.train, distribution = 'gaussian', 
+                n.trees = 1000, shrinkage = shrinkage.param, verbose = 0)
+  
+  my.gbm.pred.train <- predict(my.gbm, newdata = hitters.train)
+  my.gbm.pred.train.mse <- mean((my.gbm.pred.train - hitters.train$Salary)^2)
+  
+  my.gbm.pred.test <- predict(my.gbm, newdata = hitters.test)
+  my.gbm.pred.test.mse <- mean((my.gbm.pred.test - hitters.test$Salary)^2)
+  
+  shrinkage.results[[as.character(shrinkage.param)]] <- list(
+    'train_err' = my.gbm.pred.train.mse, 
+    'test_err' = my.gbm.pred.test.mse
+  )
+}
+
+shrinkage.results.df <- data.frame(
+  shrinkage_param <- shrinkage.grid, 
+  train_error = unname(unlist(lapply(shrinkage.results, function(x){ x[['train_err']]}))),
+  test_error = unname(unlist(lapply(shrinkage.results, function(x){ x[['test_err']]})))
+)
+
+shrinkage.results.df %>% ggplot(aes(x = shrinkage_param, y = train_error)) + 
+  geom_point() + geom_line() +
+    scale_x_continuous(
+      trans = 'log10',
+      breaks = 10^seq(-6, 0), labels = 10^seq(-6, 0), minor_breaks = NULL
+    ) + 
+  labs(x = 'Shrinkage Parameter', y = 'Train Error', 
+       title = 'Boosting on Hitters Dataset - Training Error against lambda')
+
+```
+
+### Part (d)
+```{r}
+shrinkage.results.df %>% ggplot(aes(x = shrinkage_param, y = test_error)) + 
+  geom_point() + geom_line() +
+    scale_x_continuous(
+      trans = 'log10',
+      breaks = 10^seq(-6, 0), labels = 10^seq(-6, 0), minor_breaks = NULL
+    ) + 
+  labs(x = 'Shrinkage Parameter', y = 'Test Error', 
+       title = 'Boosting on Hitters Dataset - Training Error against lambda')
+```
+
+### Part (e)
+Test MSE of the boosting regressor with the optimal $\lambda = 0.09$ as identified from the previous plot.
+```{r}
+hitters.best.boosting.model <- gbm(
+  Salary ~ ., data = hitters.train, shrinkage = 0.09, n.trees = 1000, 
+  distribution = 'gaussian'
+)
+
+hitters.best.boosting.pred <- predict(hitters.best.boosting.model, newdata = hitters.test)
+
+hitters.best.boosting.mse <- mean((hitters.best.boosting.pred - hitters.test$Salary)^2)
+
+print(paste0("The test MSE with cross-validated boosting model is: ", round(
+  hitters.best.boosting.mse, 3
+)))
+```
+
+For the sake of my brain cells at 3 AM, I will use a simple linear multiple regression model and a variant with lasso regression.
+```{r}
+hitters.lm.fit <- lm(Salary ~., data = hitters.train)
+hitters.lm.pred <- predict(hitters.lm.fit, newdata = hitters.test)
+hitters.lm.mse <- mean((hitters.lm.pred - hitters.test$Salary)^2)
+print(paste0("The test MSE with a simple multiple regression model: ", 
+             round(hitters.lm.mse, 4)))
+```
+
+Now implementing a lasso regressor, with cross-validated $\lambda$ for optimal regularization.
+
+```{r}
+# make the matrices required for a glmnet object 
+hitters.train.x <- model.matrix(Salary ~., hitters.train)
+hitters.test.x <- model.matrix(Salary ~., hitters.test)
+hitters.train.y <- hitters.train$Salary
+hitters.test.y <- hitters.test$Salary
+
+hitters.glm.cv.fit <- cv.glmnet(x = hitters.train.x, y = hitters.train.y, 
+                                alpha = 1)
+plot(hitters.glm.cv.fit)
+print(paste0("Value of lambda with minimal x-val error: ", 
+      round(hitters.glm.cv.fit$lambda.min, 5)))
+
+hitters.glm.fit.optimal <- glmnet(
+  x = hitters.train.x, y = hitters.train.y, family = 'gaussian', alpha = 1,
+  lambda = hitters.glm.cv.fit$lambda.min
+)
+
+hitters.glm.fit.optimal.pred <- predict(
+  hitters.glm.fit.optimal,
+  newx = hitters.test.x
+)
+
+hitters.glm.fit.optimal.mse <- mean((hitters.glm.fit.optimal.pred - hitters.test$Salary)^2)
+
+print(paste0(
+  "The test MSE with a lasso regressor using cross-validated lambda is: ", 
+  round(hitters.glm.fit.optimal.mse, 4)
+))
+```
+
+Based on these initial experiments, it looks like the test set MSE of the log-transformed salary is lowest with the gradient boosting regressor. Vanilla linear regression and lasso regression with cross-validated regularization parameter $\lambda$ both have an MSE above 0.45, whereas the GBM regressor has an MSE around ~0.28. 
+
+This suggests the data is highly non-linear, and the GBM is able to capture this information better than the linear models.
+
+### Part (f)
+**Which variabels appear to the be the most important predictors in the boosted model?**
+```{r}
+boosting.imp.df <- summary(hitters.best.boosting.model, plotit = F)
+boosting.imp.df %>% 
+  ggplot(aes(x = reorder(var, rel.inf), y = rel.inf)) + 
+  geom_col() + 
+  coord_flip() + 
+  labs(x = 'Feature Name', y = 'Relative Importance', 
+       title = 'Feature Importance - Hitter - Gradient Boosting Model')
+```
+
+Some of the most important variables have to do with the player's career: how frequently did the player bat, bowl, or score runs during their entire career. Years of experience is also relatively important.
+
+### Part (g)
+**Now apply bagging to the training set. What is the test MSE for this approach?**
+```{r}
+hitters.bagging.model <- randomForest(
+  x = hitters.train.x, y = hitters.train.y, ntree = 1000, mtry = 19
+)
+
+hitters.bagging.model 
+
+# Evaluate on test set 
+hitters.bagging.model.pred <- predict(hitters.bagging.model, newdata = hitters.test.x)
+hitters.bagging.model.mse <- mean((hitters.bagging.model.pred - hitters.test.y)^2)
+
+print(
+  paste0(
+    "Test MSE with a bagging model is: ", round(hitters.bagging.model.mse, 4)
+  )
+)
+
+```
+
+In this case, the bagging model outperformed the boosting model. Bagging's test MSE is 0.2295 whereas boosting's test MSE, even after cross-validation for hyperparameter tuning, is ~0.29. 
+
+## Exercise 11: `Caravan` Boosting and KNN 
+**This question uses the `Caravan` data set.**
+
+### Part (a)
+**Create a training set consisting of the first 1000 observations and a test set consisting of the remaining observations.**
+```{r}
+# Caravan data's target needs to be transformed to a 1/0 flag
+caravan.train <- Caravan[1:1000,]
+caravan.test <- Caravan[1001:nrow(Caravan),]
+```
+
+### Part (b) 
+**Fit a boosting model to the training set with `Purchase` as the response and the other variables as the predictors. Use 1,000 trees and a shrinkage value of 0.01. What predictors appear to be the most important?**
+```{r}
+caravan.boosting.fit <- gbm(
+  Purchase ~ ., data = caravan.train, n.trees = 1000, shrinkage = 0.01, 
+  distribution = 'gaussian'
+)
+
+# A summary of the fit
+caravan.boosting.fit
+
+# Feature importance
+summary(caravan.boosting.fit, plotit = FALSE) %>% 
+  dplyr::arrange(-rel.inf) %>% 
+  dplyr::filter(rel.inf != 0) %>% 
+  dplyr::mutate(rn = 1:dplyr::n()) %>% 
+  dplyr::filter(rn <= 25) %>% 
+  ggplot(aes(x = reorder(var, rel.inf), y = rel.inf)) + geom_col() + coord_flip() +
+  labs(x = 'Variable', y = 'Relative Importance', 
+       title = 'Caravan - Feature Importance')
+
+```
+There are 85 predictors, of which ~50 had zero relative importance. The top 25 of the remainder of features are shown in the plot. Most important features are:
+
+- `PPERSAUT`: Contribution car policies
+
+- `MKOOPKLA`:  Purchasing power class
+
+- `MOPLHOOG`: High level education
+
+- `PBRAND`: Contribution fire policies
+
+- `ABRAND`: Number of fire policies

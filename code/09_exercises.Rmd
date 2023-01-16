@@ -1,0 +1,612 @@
+---
+title: "ISLR - Exercises 09"
+author: "Saad M. Siddiqui"
+date: "4/11/2022"
+output: 
+  html_document:
+    toc: TRUE 
+    toc_depth: 2
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+rm(list = ls())
+library(ISLR2)
+library(e1071)
+library(ROCR)
+library(ggplot2)
+library(dplyr)
+```
+
+# Applied Exercises
+## Exercise 04 - Linear vs Non-Linear SVMs
+**Generate a simulated two-class data set with 100 observations and two features in which there is a visible but non-linear separation between the two classes. Show that in this setting, a support vector machine with a polynomial kernel (with degree greater than 1) or a radial kernel will outperform a support vector classifier on the training data. Which technique performs best on the test data? Make plots and report training and test error rates in order to back up your assertions.**
+
+For simplicity, I will be using code similar to the one in the lab for generating a non-linearly separable data set of two classes and two features.
+
+This takes some experimentation with the mean and standard deviation of the generating function.
+
+```{r}
+set.seed(163)
+n.observations <- 100
+n.predictors <- 2
+
+# Make a matrix of the data
+x <- matrix(
+  rnorm(n.observations * n.predictors, mean = 5, sd = 5),
+  ncol = n.predictors
+)
+
+# Offset the features so that the decision boundary becomes non-linear
+x[1:50, ] <- x[1:50, ] + 5              
+x[51:75, ] <- x[51:75, ] - 5
+y <- c(rep(1, 50), rep(-1, 50))
+
+# Render the plot to make sure the data is indeed not linearly separable
+plot(x, col = 2 - y)
+
+# Make into a data.frame. Convert the target to a factor, otherwise 
+# svm will train a regression SVM
+svm.data <- data.frame(x = x, y = as.factor(y))
+
+# Randomly set up train and test indices 
+svm.train.idx <- sample(1:n.observations, 0.8 * n.observations)
+svm.test.idx <- (-svm.train.idx)
+```
+
+We now fit a linear SVC, a radial basis SVC, and a polynomial SVC. In the case of the linear SVC, we can only tune the cost. In case of the polynomial and radial SVC, we can also additionally tune the polynomial degree and the $\gamma$ parameter respectively.
+
+```{r}
+# Seed random number generator and tune all three variants of SVC
+set.seed(163)
+
+# Because we are working with very limited data, use 5 folds only 
+svc.tune.control <- tune.control(cross = 5)
+
+# Simple SVC 
+linear.svc.tune <- tune(svm, y ~., data = svm.data[svm.train.idx, ],
+  ranges = list(cost = c(0.1, 1, 10, 100, 1000)), 
+  tunecontrol = svc.tune.control,
+  kernel = 'linear'
+)
+
+# Polynomial SVC 
+poly.svc.tune <- tune(svm, y ~., data = svm.data[svm.train.idx, ], 
+  ranges = list(
+    cost = c(0.1, 1, 10, 100, 1000), 
+    degree = c(1, 2, 3, 4, 5)
+  ),
+  tunecontrol = svc.tune.control,
+  kernel = 'polynomial'
+)
+
+# Radial Basis SVC
+radial.svc.tune <- tune(svm, y ~., data = svm.data[svm.train.idx, ], 
+  ranges = list(
+    cost = c(0.1, 1, 10, 100, 1000), 
+    gamma = c(1, 3, 5, 7, 9)
+  ),
+  tunecontrol = svc.tune.control,
+  kernel = 'radial'
+)
+
+# Use the best variant of each variant of the predictor on test data
+linear.svc.best <- linear.svc.tune$best.model
+poly.svc.best <- poly.svc.tune$best.model
+radial.svc.best <- radial.svc.tune$best.model
+
+evaluate_on_test_set <- function(my.svc, svc.str) {
+  summary(my.svc)
+  y.pred <- predict(my.svc, newdata = svm.data[svm.test.idx, ])
+  table(y.pred, svm.data[svm.test.idx, ]$y)
+  err.rate <- mean(y.pred != svm.data[svm.test.idx, ]$y)
+  message("The test error rate for ", svc.str, " is ", round(err.rate, 4))
+  message("---------------------------------------")
+  plot(my.svc, data = svm.data[svm.test.idx,], 
+       main = paste0("SVM Classification Plot - ", svc.str))
+}
+
+
+evaluate_on_test_set(linear.svc.best, 'Linear SVC')
+evaluate_on_test_set(poly.svc.best, 'Polynomial SVC')
+evaluate_on_test_set(radial.svc.best, 'Radial Basis SVC')
+```
+
+All three variants of the SVC have been trained on the same 80 data points and validated on the same 20 data points. 
+
+All of them have also undergone hyperparameter tuning where necessary to ensure that in each case, the best possible SVC is being used on the test data.
+
+Based on the test set performance, it looks like the polynomial SVC of degree 3 followed by the linear SVC and then the radial basis SVC. 
+
+The test error rate is highest for the polynomial SVC of degree 3, followed by the linear SVC, and then finally the radial basis SVC. 
+
+This result is slightly counterintuitive since I expected test error rate for linear SVC to be highest, given its linear decision boundary. The polynomial decision boundary seems to be a mixture of the radial decision boundary and the linear boundary, but does worse than both of them. Maybe a different cost parameter was required here. Radial basis does much better than either, although it does seem to have more margin violations.
+
+## Exercise 05 - Non-linear Logistic Regression
+**We have seen that we can fit an SVM with a non-linear kernel in order to perform classification using a non-linear decision boundary. We will now see that we can also obtain a non-linear decision boundary by performing logistic regression using non-linear transformations of the features.**
+
+### Part (a)
+**Generate a data set with $n = 500$ and $p = 2$, such that the observations belong to two classes with a quadratic decision boundary between them.**
+```{r}
+set.seed(163)
+x1 <- runif(500) - 0.5 
+x2 <- runif(500) - 0.5 
+y <- 1 * (x1^2 - x2^2 > 0)
+```
+
+### Part (b) 
+**Plot your observations, colored according to their class labels. Your plot should display $X_1$ on the x-axis, and $X_2$ on the y-axis.**
+```{r}
+non.linear.data <- data.frame(x1 = x1, x2 = x2, y = as.factor(y))
+non.linear.data %>% ggplot(aes(x = x1, y = x2, col = y))  +
+  geom_point() + 
+  labs(x = 'X1', y = 'X2', title = 'X1 against X2', 
+       subtitle = 'Expecting a quadratic decision boundary')
+```
+
+### Part (c)
+**Fit a logistic regression model to the data using $X_1$  and $X_2$ as predictors.**
+```{r}
+log.reg.fit <- glm(y ~ ., data = non.linear.data, family = binomial)
+summary(log.reg.fit)
+```
+
+### Part (d)
+**Apply this model to the training data in order to obtain the predicted class label for each training observation. Plot the observations, colored according to the predicted class labels. The decision boundary should be linear.**
+```{r}
+log.reg.pred <- predict(log.reg.fit, newdata = non.linear.data, type = 'response')
+log.reg.pred <- factor(ifelse(log.reg.pred > 0.5, 1, 0))
+non.linear.data[['log_reg_pred']] <- log.reg.pred
+non.linear.data %>% 
+  ggplot(aes(x = x1, y = x2, col = log_reg_pred)) + 
+  geom_point() + 
+  labs(x = 'X1', y = 'X2', title = 'Non-Linear Data: Logistic Regression Boundary Visualized')
+```
+
+The decision boundary is linear. However, we find that it has very little overlap with the actual classes. So the linear model completely fails to capture the non-linearty inherent in the data generating process.
+
+### Part (e)
+**Now fit a logistic regression model to the data using non-linear functions of $X_1$ and $X_2$ as predictors (e.g. $X_1^2$, $X_2^2$, $X_1 \times X_2$, $log(X_2)$).**
+
+Using 2nd order polynomial variants for both $X_1$ and $X_2$.
+```{r}
+log.reg.poly.fit <- glm(y ~ poly(x1, 2) + poly(x2, 2) - log_reg_pred, 
+                        data = non.linear.data,
+                        family = 'binomial')
+summary(log.reg.poly.fit)
+```
+
+We now get a quadratic fit, just as expected. 
+
+### Part (f)
+**Apply this model to the training data in order to botain a predicted class label for each training observation. Plot the observations, colored according to the predicted class labels. THe decision boundary should obviously be non-linear.**
+```{r}
+log.reg.poly.pred <- factor(ifelse(predict(log.reg.poly.fit, newdata = non.linear.data, type = 'response') > 0.5, 1, 0))
+
+non.linear.data[['log_reg_poly_pred']] <- log.reg.poly.pred
+
+non.linear.data %>% ggplot(aes(x = x1, y = x2, col = log_reg_poly_pred)) + 
+  geom_point() + labs(x = 'X1', y = 'X2', title = 'Non-Linear Data - Polynomial Logistic Regression')
+```
+
+Decision boundary is non-linear as expected.
+
+### Part (g)
+**Fit a support vector classifier to the data with `X1` and `X2` as predictors. Obtain a class prediction for each training observation. Plot the observations, colored according to the predicted class label.**
+```{r}
+linear.svc.tune <- tune(
+  svm, y ~ x1 + x2, data = non.linear.data, kernel = 'linear',
+  ranges = list(cost = c(0.01, 0.03, 1, 3, 10, 30, 100, 300)),
+  tunecontrol = tune.control(cross = 5)
+)
+
+linear.svc.best <- linear.svc.tune$best.model
+non.linear.data[['linear_svc_pred']] <- predict(
+  linear.svc.best, data = non.linear.data, type = 'response'
+)
+
+non.linear.data %>% ggplot(aes(x = x1, y = x2, col = linear_svc_pred)) + 
+  geom_point() + 
+  labs(x = 'X1', y = 'X2', title = 'Non-Linear Data - Linear SVC Decision Boundary')
+```
+
+Linear SVC is practically useless. It just predicts one of the two classes.
+
+### Part (g)
+**Fit a SVM using a non-linear kernel to the data. Obtain a class prediction for each training observation. Plot the observations, colored according to the predicted class labels.**
+
+For simplicity, I will fit a polynomial kernel SVC, cross-validated to find the optimal degree.
+```{r}
+poly.svc.tune <- tune(
+  svm,
+  y ~ x1 + x2, 
+  data = non.linear.data, kernel = 'polynomial', 
+  ranges = list(
+    cost = c(0.01, 0.03, 1, 3, 10, 100), 
+    degree = c(1, 2, 3, 4)
+  ),
+  tunecontrol = tune.control(cross = 5)
+)
+
+poly.svc.best <- poly.svc.tune$best.model 
+
+non.linear.data[['poly_svc_pred']] <- predict(
+  poly.svc.best, newdata = non.linear.data, type = 'response'
+)
+
+non.linear.data %>% ggplot(aes(x = x1, y = x2, col = poly_svc_pred)) + 
+  geom_point() + 
+  labs(x = 'X1', y = 'X2', 
+       title = 'Non-Linear Data: Polynomial Kernel SVC Decision Boundary')
+```
+
+This also gives an identical decision boundary to the polynomial logistic regression.
+
+### Part (i)
+**Comment on your results.**
+```{r}
+non.linear.data %>% 
+  dplyr::summarize(
+    err_rate_log_reg = mean(y != log_reg_pred),
+    err_rate_log_reg_poly = mean(y != log_reg_poly_pred),
+    err_rate_lin_svc = mean(y != linear_svc_pred), 
+    err_rate_poly_svc = mean(y != poly_svc_pred)
+  )
+```
+
+
+- These results establish that a logistic regression with non-linear features or basis functions can fit non-linear decision boundaries. 
+
+- Likewise, a SVC with a linear kernel cannot fit data that is not linearly separable.
+
+- Logistic regression with non-linear basis functions/transformations for the features and SVMs with non-linear kernels give very similar decision boundaries and error rates.
+
+- Here, we can see that the logistic regression with polynomial features actually has a 0% training error rate, whereas the polynomial degree SVC has a 0.012 degree error rate.
+
+- Linear SVC is not much better than linear logstic regression - in fact it's worse on the training data.
+
+- The small discrepancies in these results might be due to the loss function for logistic regression being slightly different from the hinge loss used by SVC, although that is more relevant when we are using a regularization penalty.
+
+## Exercise 06 - Barely Separable Data
+**At the end of Section 9.6.1, it is claimed that in the case of data that is just barely linearly separable, a support vector classifier with a small value of `cost` that misclassifies a couple of training observations may perform better on test data than ne with a high value of `cost` that does not misclassify any training observations. You will now investigate this claim.**
+
+### Part (a)
+**Generate a two-class data with $p = 2$ in such a way that the classes are just barely linearly separable.**
+
+For simplicity, I will use code that is very similar to the ones provided in the examples.
+
+```{r}
+set.seed(1)
+x <- matrix(rnorm(100 * 2, sd = 0.55), ncol = 2)    # 20 observations, 2 predictors 
+y <- c(rep(-1, 50), rep(1, 50))         # Half belong to each class
+x[y == 1, ] <- x[y == 1, ] + 1.0        # We offset each predictor for a class by 1
+x[y == 1, ] <- x[y == 1, ] + 0.5 
+plot(x, col = (y + 5) / 2, pch = 19)
+
+svc.data <- data.frame(x = x, y = factor(y))
+train.idx <- sample(1:100, 100 * 0.8)
+test.idx <- (-train.idx)
+```
+
+
+### Part (b) 
+**Compute the cross-validation error rates for support vector classifiers with a range of `cost` values. How many training errors are misclassified for each value of `cost` considered, and how does this relate to the cross-validation errors obtained?**
+```{r}
+set.seed(1)
+
+# This object stores the cross-validation results
+linear.svc.tune <- tune(
+  svm, y ~ ., data = svc.data[train.idx, ], kernel = 'linear', 
+  ranges = list(cost = 10^seq(-6, 6, 0.5)), 
+  tunecontrol = tune.control(cross = 5)
+)
+linear.svc.val.results <- linear.svc.tune$performances
+
+# This object stores the training results 
+linear.svc.train.results <- list()
+for (i in 10^seq(-6, 6, 0.5)) {
+  my.svm <- svm(y ~ ., data = svc.data[train.idx, ], kernel = 'linear', cost = i)
+  train.pred <- predict(my.svm, newdata = svc.data[train.idx, ], type = 'response')
+  linear.svc.train.results[[as.character(i)]] <- mean(train.pred != svc.data[train.idx, ]$y)
+}
+
+linear.svc.train.results.df <- data.frame(cost = as.numeric(names(linear.svc.train.results)),
+                                          error = unlist(unname(linear.svc.train.results)))
+
+err.df.final <- data.frame(
+  cost = linear.svc.val.results$cost, 
+  err_val = linear.svc.val.results$error, 
+  err_train = linear.svc.train.results.df$error
+)
+
+err.df.final %>% data.table::melt(id.vars = 'cost') %>% 
+  ggplot(aes(x = cost, y = value, color = variable, group = variable)) + 
+  geom_point() + 
+  geom_line() + 
+  facet_wrap(variable ~., scales = 'free', nrow = 2) + 
+  scale_x_continuous(trans = 'log10', breaks = 10^seq(-6, 6, 0.5), 2) + 
+  labs(x = 'Cost', y = 'Error', title = 'Linearly Separable Data - Errors against Cost') +
+  theme(axis.text.x = element_text(angle = 90), legend.position = 'none')
+
+```
+
+There are 100 observations. For all `cost` values above 0.01, we observe practically 0 misclassified data points. This trend is also consistent in the validation data. 
+
+For `cost` values lower 0.01, misclassified training examples increase to 32 and then 50, and on the validation set increase to 32.
+
+Training set indicates optimal cost is 100, whereas validation suggests optimal cost is 10 or 0.01. 
+
+This means for the training data, error is minimised when there is a very high cost associated with a margin violation, so there will be very few margin violations resulting in a very narrow margin. 
+
+The validation set suggests that it might be better to use a soft margin classifier which allows for some margin violations and doesn't incur as severe a penalty for them, in the interest of mitigating overfitting.
+
+### Part (c)
+**Generate an appropriate test data set, and compare the test errors corresponding to each of the values of `cost` considered. Which value of `cost` leads to the fewest errors, and how does this compare to the values of `cost` that yield the fewest training errors and the fewest cross-validation errors?**
+```{r}
+# Train two SVCs - one with cost 0.01 and another with cost 100 
+svc.fit.cost_0_01 <- svm(y ~ ., 
+                         data = svc.data[train.idx, ], kernel = 'linear', cost = 0.01)
+svc.fit.cost_100 <- svm(y ~ ., 
+                        data = svc.data[train.idx, ], kernel = 'linear', cost = 100) 
+
+# Make predictions and store in a dataframe
+my.test.data <- data.frame(
+  x1 = svc.data[test.idx, ]$x.1, x2 = svc.data[test.idx, ]$x.2, y = svc.data[test.idx, ]$y,
+  pred_svc_cost_0_01 = predict(svc.fit.cost_0_01, newdata = svc.data[test.idx, ], type = 'response'), 
+  pred_svc_cost_100 = predict(svc.fit.cost_100, newdata = svc.data[test.idx, ], type = 'response')
+)
+
+# Get percentage of training errors for each prediction
+my.test.data %>% 
+  dplyr::summarize(
+    count = dplyr::n(), 
+    err_rate_cost_0_01 = mean(pred_svc_cost_0_01 != y),
+    err_rate_cost_100 = mean(pred_svc_cost_100 != y),
+    identical_pred = mean(pred_svc_cost_0_01 == pred_svc_cost_100)
+  )
+```
+
+
+### Part (d) 
+**Discuss your results.**
+Results are counterintuitive. I expected the error rate to be much higher for a cost of 100 compared to a cost of 0.01. But it seems like on this specific test set, the two variants of the SVC lead to identical predictions, and practically no errors.
+
+Validation set and training set errors also tell a similar story: that a higher cost and a lower cost don't necessarily lead to worse predictions. Might be a consequence of the small training and test set size.
+
+## Exercise 07 - Support Vector Approaches for `Auto`
+**In this problem, you will use support vector approaches in order to predict whether a given car gets high or low gas mileage based on the `Auto` data set.**
+
+### Part (a)
+**Create a binary variable that takes on a 1 for cars with gas mileage above the median and a 0 for cars with gas mileage below the median.**
+```{r}
+# Creating the new binary target and removing `mpg` from the list of predictors 
+# otherwise information leak
+
+my.auto <- Auto %>% 
+  dplyr::mutate(high_mileage = factor(mpg > median(mpg))) %>% 
+  dplyr::select(-mpg)
+```
+
+
+### Part (b) 
+**Fit a support vector classifier to the data with various values of `cost`, in order to predict whether a car gets high or low gas mileage. Report the cross-validation errors associated with different values of the parameter. Comment on your results. Note that you'll need to fit the classifier without the gas mileage variable to produce sensible results.**
+```{r}
+auto.svc.tune <- tune(svm, high_mileage ~ ., data = my.auto, kernel = 'linear', 
+                      ranges = list(cost = 10^seq(-6, 6, 0.5)), 
+                      tunecontrol = tune.control(cross = 5))
+
+auto.svc.tune.search <- auto.svc.tune$performances
+auto.svc.tune.search %>% 
+  ggplot(aes(x = cost, y = error)) + 
+  geom_point() + 
+  geom_line() + 
+  scale_x_continuous(trans = 'log10', breaks = 10^seq(-6, 6, 0.4)) + 
+  labs(x = 'Cost Parameter', y = 'Error', title = 'Auto - Cross-validated Linear SVC Error against Cost') + 
+  theme(axis.text.x = element_text(angle = 90))
+
+message("Best performance with a linear SVC")
+auto.svc.tune$best.model
+auto.svc.tune$best.performance
+```
+
+Cross-valdiation error is never higher than 55% and never lower than 8.^%. The lowest cross-validated error is observed with a cost of 0.01. Interestingly, as the cost increases, the cross-validated error also increases slightly to ~12%. It seems in this case, a very narrow margin classifier leads to a higher error than a very lax, wide and soft margin classifier.
+
+### Part (c)
+**Now repeat (b), this time using SVMs with radial and polynomial basis kernels, with different values of `gamma` and `degree` and `cost`. Comment on your results.**
+```{r}
+auto.svm.poly.tune <- tune(
+  svm, high_mileage ~ ., data = my.auto, kernel = 'polynomial',
+  ranges = list(cost = 10^seq(-6, 6, 1), degree = c(1, 2, 3, 4, 5)),
+  tunecontrol = tune.control(cross = 5)
+)
+
+auto.svm.radial.tune <- tune(
+  svm, high_mileage ~ ., data = my.auto, kernel = 'radial',
+  ranges = list(cost = 10^seq(-6, 6, 1), gamma = c(1, 2, 3, 4, 5)),
+  tunecontrol = tune.control(cross = 5)
+)
+
+# Make a 2D density plot showing how cross-validated error varies with each param 
+auto.svm.poly.tune$performances %>% 
+  ggplot(aes(x = cost, y = degree, fill = error )) +
+  scale_x_continuous(trans = 'log10', breaks = 10^seq(-6, 6, 1)) + 
+  geom_tile(aes(width = 0.95, height = 0.95)) + 
+  labs(title = 'Polynomial SVC - Error By Hyperparameter Grid', 
+                     x = 'Cost (log scale)')
+
+# Make a similar density plot for the radial basis grid search
+auto.svm.radial.tune$performances %>% 
+  ggplot(aes(x = cost, y = gamma, fill = error )) +
+  scale_x_continuous(trans = 'log10', breaks = 10^seq(-6, 6, 1)) + 
+  geom_tile(aes(width = 0.95, height = 0.95)) + 
+  labs(title = 'Radial Basis SVC - Error By Hyperparameter Grid', 
+                     x = 'Cost (log scale)')
+
+# Outputting best parameters for each model
+message("Best parameters for the polynomial SVM")
+auto.svm.poly.tune$best.model
+auto.svm.poly.tune$best.performance
+
+message("--------------------------------------")
+message("Best parameters for the radial SVM")
+auto.svm.radial.tune$best.model
+auto.svm.radial.tune$best.performance
+```
+
+
+In the non-linear models, the best models seem to be the ones with very high costs, in contrast to the linear SVC. This may be because in higher dimensional/transformed space, there is a greater tendency to overfit the training data and so the high cost compensates for that. 
+
+The cross-validated error rate for the tuned polynomial SVC IS 8.9%. The same metric for the tuned radial basis SVC is 8.6%. Compared to the linear SVC with its cross-validated error of 8.4%, it looks like the linear SVC outperforms its non-linear counterparts, probably because it has a simpler decision boundary to fit.
+
+### Part (d)
+**Make some plots to back up your assertions.**
+See above 
+
+## Exercise 08 - Support Vectors with `OJ` Data Set
+**This problem involves the `OJ` data set which is part of the `ISLR2` package.**
+
+### Part (a) 
+**Create a training set containing a random sample of 800 observations and a test set containing a random sample of 800 observations, and a test set containing the remaining observations.**
+```{r}
+set.seed(163)
+oj.train.idx <- sample(1:nrow(OJ), 800)
+oj.test.idx <- (-oj.train.idx)
+```
+
+### Part (b) 
+**Fit a support vector classifier to the training data using `cost = 0.01` with `Purchase` as the response and the other variables as the predictors. Use the `summary` function to produce summary statistics, and describe the results obtained.**
+```{r}
+# First, fit the 'default' linear SVC to the training data
+oj.svc.linear.default <- svm(Purchase ~., data = OJ[oj.train.idx, ], 
+                             kernel = 'linear', cost = 0.01)
+
+# Check summary 
+summary(oj.svc.linear.default)
+```
+
+A low cost leads to ~427 support vectors in a data set of 800 training examples. The vectors are more or less equally distributed between the two classes. We expect a lot of margin violations with such a low cost, and generally a very large margin as well.
+
+
+### Part (c)
+**What are the training and test error rates?**
+```{r}
+oj.svc.linear.default.pred.train <- predict(
+  oj.svc.linear.default, newdata = OJ[oj.train.idx, ]
+)
+
+oj.svc.linear.default.pred.test <- predict(
+  oj.svc.linear.default, newdata = OJ[oj.test.idx, ]
+)
+
+oj.svc.linear.train.err <- mean(oj.svc.linear.default.pred.train != OJ[oj.train.idx,]$Purchase)
+oj.svc.linear.test.err <- mean(oj.svc.linear.default.pred.test != OJ[oj.test.idx,]$Purchase)
+
+message(paste0("The train error rate is : ", round(oj.svc.linear.train.err, 2)))
+message(paste0("The test error rate is : ", round(oj.svc.linear.test.err, 2)))
+```
+
+
+### Part (d)
+**Use the `tune` function to select an optimal `cost`. Consider values n the range 0.01 to 10.**
+```{r}
+oj.svc.linear.tune <- tune(svm, Purchase ~., data = OJ[train.idx, ], kernel = 'linear', 
+                           ranges = list(cost = seq(0.01, 10, 0.05)))
+oj.svc.linear.tune$best.model
+```
+
+
+
+### Part (e)
+**Compute the training and test error rates using this new value for `cost`.**
+```{r}
+oj.svc.linear.best.pred.train <- predict(oj.svc.linear.tune$best.model, OJ[train.idx, ])
+oj.svc.linear.best.pred.test <- predict(oj.svc.linear.tune$best.model, OJ[test.idx, ])
+
+oj.svc.linear.best.train.err <- mean(oj.svc.linear.best.pred.train != OJ[train.idx, ]$Purchase)
+oj.svc.linear.best.train.err <- mean(oj.svc.linear.best.pred.test != OJ[test.idx, ]$Purchase)
+
+message(paste0("The train error rate is : ", round(oj.svc.linear.best.train.err, 2)))
+message(paste0("The test error rate is : ", round(oj.svc.linear.best.train.err, 2)))
+```
+
+
+
+### Part (e) 
+**Repeat parts (b) through (e) using a support vector machine with a radial kernel. Use the default value of `gamma`.**
+```{r}
+set.seed(163)
+oj.svm.radial.basic <- svm(Purchase ~., data = OJ[train.idx, ], kernel = 'radial')
+summary(oj.svm.radial.basic)
+
+message(
+  "Training Error for Base Radial SVM is: ", 
+  round(mean(OJ[oj.train.idx, ]$Purchase != predict(oj.svm.radial.basic, OJ[oj.train.idx, ])),2)
+)
+
+message(
+  "Test Error for Base Radial SVM is: ", 
+  round(mean(OJ[oj.test.idx, ]$Purchase != predict(oj.svm.radial.basic, OJ[oj.test.idx, ])), 2)
+)
+
+# Tune the SVM 
+oj.svm.radial.tune <- tune(svm, Purchase ~ ., data = OJ[oj.train.idx, ], kernel = 'radial', 
+                    ranges = list(cost = seq(0.01, 10, 0.05)))
+oj.svm.radial.tune$best.parameters
+oj.svm.radial.best <- oj.svm.radial.tune$best.model
+message("Best cross-validated performance for radial SVM: ", oj.svm.radial.tune$best.performance)
+
+
+message(
+  "Training Error for Tuned Radial SVM is: ", 
+  round(mean(OJ[oj.train.idx, ]$Purchase != predict(oj.svm.radial.best, OJ[oj.train.idx, ])),2)
+)
+
+message(
+  "Test Error for Tuned Radial SVM is: ", 
+  round(mean(OJ[oj.test.idx, ]$Purchase != predict(oj.svm.radial.best, OJ[oj.test.idx, ])), 2)
+)
+```
+
+
+### Part (f)
+**Repeat parts (b) through (e) using a support vector machine with a polynomial kernel. Set `degree = 2`.**
+```{r}
+set.seed(163)
+oj.svm.poly.basic <- svm(Purchase ~., data = OJ[train.idx, ], kernel = 'polynomial', 
+                         degree = 2)
+summary(oj.svm.poly.basic)
+
+message(
+  "Training Error for Base Poly SVM is: ", 
+  round(mean(OJ[oj.train.idx, ]$Purchase != predict(oj.svm.poly.basic, OJ[oj.train.idx, ])),2)
+)
+
+message(
+  "Test Error for Base Poly SVM is: ", 
+  round(mean(OJ[oj.test.idx, ]$Purchase != predict(oj.svm.poly.basic, OJ[oj.test.idx, ])), 2)
+)
+
+# Tune the SVM 
+oj.svm.poly.tune <- tune(svm, Purchase ~ ., data = OJ[oj.train.idx, ], kernel = 'polynomial',
+                         degree = 2, ranges = list(cost = seq(0.01, 10, 0.05)))
+oj.svm.poly.tune$best.parameters
+oj.svm.poly.best <- oj.svm.poly.tune$best.model
+message("Best cross-validated performance for poly SVM: ", oj.svm.poly.tune$best.performance)
+
+
+message(
+  "Training Error for Tuned Poly SVM is: ", 
+  round(mean(OJ[oj.train.idx, ]$Purchase != predict(oj.svm.poly.best, OJ[oj.train.idx, ])),2)
+)
+
+message(
+  "Test Error for Tuned Poly SVM is: ", 
+  round(mean(OJ[oj.test.idx, ]$Purchase != predict(oj.svm.poly.best, OJ[oj.test.idx, ])), 2)
+)
+```
+
+
+### Part (g)
+**Overall, which approach seems to give the best results on this data?**
+Non-linear SVM with a Gaussian kernel using the default `gamma` and a cost of 0.56 gives the lowest cross-validated error rate as well as the test set error rate, or a non-linear degree-2 polynomial kernel with cost = 1. Both give a test set error rate of 0.22, and a cross-validated 

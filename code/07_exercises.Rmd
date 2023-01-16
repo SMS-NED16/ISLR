@@ -1,0 +1,1125 @@
+---
+title: "ISLR - Chapter 07 - Exercises"
+author: "Saad M. Siddiqui"
+date: "4/6/2022"
+output: 
+  html_document:
+    toc: TRUE
+    toc_depth: 2
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+rm(list = ls())
+library(ISLR2)
+library(dplyr)
+library(ggplot2)
+library(boot)                 # For CV
+library(splines)              # For splines such as bs 
+library(leaps)                # For susbet selection 
+library(gam)                  # For GAMs
+```
+
+
+# Conceptual Exercises 
+## Exercise 01 - Continuity of Cubic Regression Splines
+**It was mentioned in the chapter that a cubic regression spline with one knot $\xi$ can be obtained by using a basis of the form $x$, $x^2$, $x^3$, $(x - \xi)^3_+$ where  $(x - \xi)^3_+ = (x - \xi)^3$ if $x > \xi$ and 0 otherwise.**
+
+**We will now show that a function of the form **
+$$
+f(x) = \beta_0 + \beta_1x + \beta_2x^2 + \beta_3x^3 + \beta_4(x - \xi)^3_+
+$$
+
+**is indeed a cubic regression spline, regardless of the coefficients $\beta_j$.**
+
+### Part (a)
+**Find a cubic polynomial **
+$$
+f_1(x) = a_1 + b_1x + c_1x^2 + d_1x^3
+$$
+**such that $f(x) = f_1(x) \ \forall x \leq \xi$. Express $a_1, b_1, c_1, d_1$ in terms of $\beta_j$.**
+
+When $x \leq \xi$, $(x - \xi)^3_+ = 0$. Therefore,
+$$
+\begin{align}
+f_1(x) &= \beta_0 + \beta_1x + \beta_2x^2 + \beta_3x^3 + \beta^4(0)\\
+f_1(x) &= \beta_0 + \beta_1x + \beta_2x^2 + \beta_3x^3\\
+a_1 + b_1x + c_1x^2 + d_1x^3 &= \beta_0 + \beta1x + \beta_2x^2 + \beta_3x^3\\
+\end{align}
+$$
+
+This means
+$$
+[a_1, b_1, c_1, d_1] = [\beta_0, \beta_1, \beta_2, \beta_3]
+$$
+
+### Part (b) 
+**Find a cubic polynomial**
+$$
+f_2(x) = a_2 + b_2x + c_2x^2 + d_2x^3
+$$
+
+**such that $f(x) = f_2(x) \ \forall x > \xi$. Express $a_2, b_2, c_2, d_2$ in terms of $\beta_j$.**
+
+When $x > \xi$, $(x - \xi)^3_+ = (x - \xi)^3$. This means
+$$
+\begin{aligned}
+f_2(x) &= \beta_0 + \beta_1 x + \beta_2 x^2 + \beta_3 x^3 + \beta_4(x - \xi)^3\\
+f_2(x) &= \beta_0 + \beta_1 x + \beta_2 x^2 + \beta_3 x^3 + \beta_4[x^3 - 3x^2\xi + 3x\xi^2 - \xi^3]\\
+f_2(x) &= (\beta_0 - \beta_4\xi^3) + (\beta_1 + 3\beta_4\xi^2)x + (\beta_2 - 3\beta_4\xi)x^2 + (\beta_3 + \beta_4)x^3\\
+a_2 + b_2x + c_2x^2 + d_2x^3 &= (\beta_0 - \beta_4\xi^3) + (\beta_1 + 3\beta_4\xi^2)x + (\beta_2 - 3\beta_4\xi)x^2 + (\beta_3 + \beta_4)x^3
+\end{aligned}
+$$
+
+This means
+$$
+[a_2, b_2, c_2, d_2] = [\beta_0 - \beta_4\xi^3, \beta_1 + 3\beta_4\xi^2, \beta_2 - 3\beta_4\xi, \beta_3 + \beta_4]
+$$
+
+We have now established that the cubic spline is a piecewise polynomial. 
+
+### Part (c)
+**Show that $f_1(\xi) = f_2(\xi)$ i.e. $f(x)$ is continuous at $\xi$.**
+
+
+We evaluate expressions for $f_1(\xi)$ and $f_2(\xi)$.
+
+$$
+\begin{align}
+f_1(\xi) &= \beta_0 + \beta_1\xi + \beta_2\xi^2 + \beta_3\xi^3\\ 
+\text{and}\\
+f_2(\xi) &= \beta_0 - \beta_4\xi^3 + (\beta_1 + 3\beta_4\xi^2)(\xi) + (\beta_2 - 3\beta_4\xi)(\xi)^2 + (\beta_3 + \beta_4)(\xi)^3 \\
+f_2(\xi) &= \beta_0 - \beta_4\xi^3 + \beta_1\xi + 3\beta_4\xi^3 + \beta_2\xi^2 - 3\beta_4\xi^3 + \beta_3\xi^3 + \beta_4\xi^3\\
+f_2(\xi) &= \beta_0 + \beta_1\xi + \beta_2\xi^2 + \beta_3\xi^3 + 3\beta_4\xi^3 - 3\beta_4\xi^3 + \beta_4\xi^3 - \beta_4\xi^3\\
+
+f_2(\xi) &= \beta_0 + \beta_1\xi + \beta_2\xi^2 + \beta_3\xi^3
+\end{align}
+$$
+
+Hence proved. 
+
+### Part (d)
+**Show that $f_1' (\xi) = f_2' (\xi)$ i.e. $f'(x)$ is continuous at $\xi$.**
+
+For function $f_1(x)$
+$$
+\begin{align}
+f_1(x) &= \beta_0 + \beta_1x + \beta_2x^2 + \beta_3x^3\\
+f_1'(x) &= \beta_1 + 2\beta_2x + 3\beta_3x^2\\
+f_1'(\xi) &= \beta_1 + 2\beta_2\xi + 3\beta_3\xi^3
+\end{align}
+$$
+
+Likewise, for $f_2(x)$
+$$
+\begin{align}
+f_2(x) &= (\beta_0 - \beta_4\xi^3) + (\beta_1 + 3\beta_4\xi^2)x + (\beta_2 - 3\beta_4\xi)x^2 + (\beta_3 + \beta_4)x^3\\
+f_2'(x) &= (\beta_1 + 3\beta_4\xi^2) + 2(\beta_2 - 3\beta_4\xi)x + 3(\beta_3 + \beta_4)x^2\\
+f_2'(\xi) &= \beta_1 + 3\beta_4\xi^2 + 2(\beta_2 - 3\beta_4\xi)\xi + 3(\beta_3 + \beta_4)(\xi)^2\\
+f_2'(\xi) &= \beta_1 + 3\beta_4\xi^2 +2\beta_2\xi - 6\beta_4\xi^2 + 3\beta_3\xi^2 + 3\beta_4\xi^2\\
+f_2'(\xi) &= \beta_1 + 2\beta_2\xi  +3\beta_3\xi^2 + 3\beta_4\xi^2 + 3\beta_4\xi^2 - 6\beta_4\xi^2\\
+f_2'(\xi) &= \beta_1 + 2\beta_2\xi + 3\beta_2\xi^2
+\end{align}
+$$
+
+Hence proved.
+
+### Part (e)
+**Show that $f_1'' (\xi) = f_2'' (\xi)$ i.e. $f''(x)$ is continuous at $\xi$.**
+
+For function $f_1(x)$
+$$
+\begin{align}
+f_1'(x) &= \beta_1 + 2\beta_2x + 3\beta_3x^2\\
+f_1''(x) &= 2\beta_2 + 6\beta_3x\\
+f_1''(\xi) &= 2\beta_2 + 6\beta_3\xi
+\end{align}
+$$
+
+Likewise, for $f_2(x)$
+$$
+\begin{align}
+f_2'(x) &= (\beta_1 + 3\beta_4\xi^2) + 2(\beta_2 - 3\beta_4\xi)x + 3(\beta_3 + \beta_4)x^2\\
+f_2''(x) &= 2(\beta_2 - 3\beta_4\xi) + 6(\beta_3 + \beta_4)x\\
+f_2''(\xi) &= 2\beta_2 - 6\beta_4\xi + 6\beta_3\xi + 6\beta_4\xi\\
+f_2''(\xi) &= 2\beta_2 + 6\beta_3\xi - 6\beta_4\xi + 6\beta_4\xi\\
+f_2''(\xi) &= 2\beta_2 + 6\beta_3\xi
+\end{align}\\
+$$
+
+Hence proved.
+
+Through this derivation, we have established
+- the cubic regression spline is a piecewise function which is continuous at $\xi$.
+
+- the spline's first derivative is continuous at $\xi$.
+
+- the spline's second derivative is also continuous at $\xi$.
+
+- the second derivative being continuous means that the $f(x)$ is also smooth at the knot $\xi$.
+
+## Exercise 02 - Smoothing Splines and $\lambda$
+**Suppose that a curve $\hat{g}$ is computed to smoothly fit a set of points using the following formula.**
+$$
+\hat{g} = \text{arg} \ \underset{g}{min}\bigl(\sum\limits_{i = 1}^n(y_i - g(x_i))^2 + \lambda \int \bigl[g^{(m)}(x)\bigr]^2dx\bigr)
+$$
+
+**where $g^{(m)}$ represents the $m$th derivative of $g$ (and $g^{(0)} = g$). Provide example sketches of $\hat{g}$ in each of the following scenarios.**
+
+For this exercise, I'll use the methodology outlined by [Liam Morgan](https://rpubs.com/lmorgan95/ISLR_CH7_Solutions) in his solutions.
+
+$g$ is a data generating function, which I'll arbitrarily assume to be 
+
+$$
+\begin{align}
+g(X) &= X^2 + sin(163(X + 0.164))\\
+\Rightarrow Y &= g(X) + \epsilon\\
+\end{align}
+$$
+
+such that 
+$$
+X \sim \mathcal{U}[0, 1]\\
+\epsilon \sim \mathcal{N}(0, 1)
+$$
+
+Implementing this data generating process with code.
+```{r}
+set.seed(1)
+X <- runif(50)
+eps <- rnorm(n = 50, mean = 0, sd = 1)
+Y <- X^2 + sin(10 * (X + 10)) + eps
+
+gen.fn <- function(x){x^2 + sin(10 * (x + 10))}
+
+# Test with a plot 
+ggplot(data.frame(X, Y), aes(x = X, y = Y)) + 
+  geom_point() + 
+  stat_function(fun = gen.fn, aes(col = 'Generating Function')) +
+  theme(legend.position = 'bottom')
+```
+
+The intuition here is that we want to find out the value $g$ that will minimize the residual sum of squares subject to some smoothing penalty. 
+
+As $\lambda \rightarrow \infty$, the penalty term's magnitude increases, which means the smoothing spline is incentivized to choose a form $\hat{g}$.
+
+As $\lambda \rightarrow 0$, the penalty term is eliminated, which means the $\hat{g}$ can be as variable as required to fully interpolate the data, and there is no penalty associated with any variability of the slope in $g$. 
+
+$m$ controls the "order" of the slope that is minimised. Generally, $m$ means the $\lambda$ penalty incentivizes choice of a $\hat{g}$  
+
+### Part (a)
+**$\lambda = \infty, m = 0$**
+
+With $\m = 0$, the equation becomes
+
+$$
+\hat{g} \approx \text{arg} \ \underset{g}{min}\bigl(\lambda \int \bigl[g^{(0)}(x)\bigr]^2dx \bigr)
+$$
+
+This means the smoothing penalty is applied to $g^{(0)}$. As $\lambda \rightarrow \infty$, $\hat{g} \approx \lambda \int \bigl[g^{(0)}(x)\bigr]^2dx\bigr)$ i.e. the penalty term will apply to the sum of squares of the original function $\g$. This essentially forces $g = 0$, **which means the selected form of $\hat{g}$ will be $\hat{g} = 0$**, which is the value of $g$ that minimises the sum of squared $g$.
+
+```{r}
+my.df <- data.frame(
+  x = X, 
+  y = Y,
+  y_pred = 0
+) 
+
+ggplot(my.df, aes(x = x)) + 
+  geom_point(aes(y = y)) + 
+  geom_smooth(aes(y = y_pred, col = 'Chosen Function')) +
+  stat_function(fun = gen.fn, aes(col = 'Generating Function')) 
+```
+
+
+### Part (b)
+$\lambda = \infty, m = 1$
+
+The point about the penalty term dominating the fit still applies. However, this time the penalty is applied to 
+$$
+\hat{g} \approx \text{arg} \ \underset{g}{min}\bigl(\lambda \int \bigl[g^{(1)}(x)\bigr]^2dx \bigr)
+$$
+
+Which means the penalty is applied to the slope of $g$, and forces $g^{(1)} \rightarrow 0$. This can happen when the $g(x)$ is a straight line. Tecnically, any constant function $g(x) = k$ would suffice to minimize the penalty term, but we also need to implicitly minimise the RSS term, which is done by 
+
+$$
+g(x) = \frac{1}{N} \sum_{i = 1}^{N} {y_i^2}
+$$
+
+```{r}
+my.df <- data.frame(x = X, y = Y, y_pred = mean(Y))
+my.df %>% 
+  ggplot(aes(x = x)) + 
+  geom_point(aes(y = y)) + 
+  geom_line(aes(y = y_pred, col = 'Chosen function')) +
+  stat_function(fun = gen.fn, aes(col = 'Generating Function'))
+```
+
+
+### Part (c) 
+$\lambda = \infty, m = 2$
+
+Applying a similar logic to this condition, the equation becomes dominated by the penalty term and the term being minimised becomes
+
+$$
+\hat{g} \approx \text{arg} \ \underset{g}{min}\bigl(\lambda \int \bigl[g^{(2)}(x)\bigr]^2dx \bigr)
+$$
+Which is the same as minimising a function $g$ such that its second derivative is zero i.e. the slope does not change with $x$. This can only occur for a straight line, which can be approximated by the linear model because it will also minimize the RSS.
+
+```{r}
+my.df <- data.frame(
+  x = X, y = Y,
+  y_pred = predict(lm(Y ~ X, data = data.frame(X, Y)), new.data = list(X))
+)
+
+my.df %>% 
+  ggplot(aes(x = X)) + 
+  geom_point(aes(y  = y)) +
+  geom_line(aes(y = y_pred, col = 'Chosen Function')) +
+  stat_function(fun = gen.fn, aes(col = 'Generating Function'))
+```
+
+
+### Part (d) 
+$\lambda = \infty, m = 3$
+
+When $m = 3$, the term being optimized or minimized is 
+
+$$
+\hat{g} \approx \text{arg} \ \underset{g}{min}\bigl(\lambda \int \bigl[g^{(3)}(x)\bigr]^2dx \bigr)
+$$
+The integrand is minimisd when the second derivative of $g(x)$ is a constant. This requirement is satisfied by a quadratic equation of the form $ax^2 + bx + c$. To choose a specific quadratic equation, we can try to minimise the quadratic equation through sum of least squares.
+
+```{r}
+my.df <- data.frame(
+  x = X, y = Y,
+  y_pred = predict(lm(Y ~ poly(X, 2)), newdata = list(X))
+)
+
+my.df %>% 
+  ggplot(aes(x = X)) + 
+  geom_point(aes(y = Y)) + 
+  geom_line(aes(y = y_pred, col = 'Chosen Function')) + 
+  stat_function(fun = gen.fn, aes(col = 'Generating Function'))
+```
+
+
+### Part (e)
+$\lambda = 0, m = 3$
+
+When $\lambda = 0$, the smoothing spline equation simplifies to 
+$$
+\hat{g} = \text{arg} \ \underset{g}{min}\bigl(\sum\limits_{i = 1}^n(y_i - g(x_i))^2
+$$
+This means there no constraint on the regression spline to be smooth. It can be as variable as required to fully interpolate the data to minimise training RSS.
+
+```{r}
+my.spline.fit <- smooth.spline(x = X, y = Y, all.knots = TRUE, lambda = 1e-15)
+my.spline.pred <- predict(
+  my.spline.fit, x = seq(min(X) - 0.02, max(X) + 0.02, by = 0.0001)
+)
+
+data.frame(x = X, y = Y) %>% ggplot(aes(x = x, y = y)) + 
+  geom_point() + 
+  stat_function(fun = gen.fn, aes(col = 'Generating Function')) + 
+  geom_line(data = data.frame(x = my.spline.pred$x, y = my.spline.pred$y), 
+            aes(x = x, y = y, col = 'Chosen Function'))
+```
+
+
+Using LOOCV, we can get a much better regression spline that uses the optimal value of $\lambda$.
+```{r}
+my.spline.loocv.fit <- smooth.spline(x = X, y = Y, all.knots = T) 
+my.spline.loocv.pred <- predict(
+  my.spline.loocv.fit, x = seq(min(X) - 0.02, max(X) + 0.02, by = 0.001)
+)
+
+data.frame(x = X, y = Y) %>% ggplot(aes(x = x, y = y)) + 
+  geom_point() + 
+  stat_function(fun = gen.fn, aes(col = 'Generating Function')) + 
+  geom_line(data = data.frame(
+    x = my.spline.loocv.pred$x, y = my.spline.loocv.pred$y), 
+            aes(x = x, y = y, col = 'Chosen Function'))
+
+```
+
+With LOOCV to use $\lambda$ and a knot at each data point, we have managed to generate a smoothing spline that is very, very similar to the actual chosen function, despite the noise in the data. 
+
+## Exercise 03 - Basis Functions (2-part Function)
+**Suppose we fit a curve with the basis functions $b_1(X) = X, b_2(X) = (X - 1)^2I(X \geq 1)$. We fit the linear regression model**
+$$
+Y = \beta_0 + \beta_1b_1(X) + \beta_2b_2(X)  + \epsilon
+$$
+
+**and obtain the coefficient estimates $\hat\beta_0 = 1, \ \hat{\beta_1} = 1, \ \hat{beta_2} = 3$. Sketch the estimated curve between $X = -2$ and $X = 6$. Note the intercepts, slopes, and other relevant information.**
+
+After substituting the basis functions, the curve becomes
+$$
+Y = \beta_0 + \beta_1(X) + \beta_2(X-1)^2I(X \geq 1)
+$$
+
+For $X < 1$, this means the equation is just 
+$$
+\begin{align}
+Y_1 &= \beta_0 + \beta_1(X)\\
+Y_1 &= 1 + X
+\end{align}
+$$
+
+And for $X \geq 1$ it assumes the full form 
+$$
+\begin{align}
+Y_2 &= \beta_0 + \beta_1(X) + \beta_2(X - 1)^2\\
+Y_2 &= \beta_0 + \beta_1(X) + \beta_2(X^2 - 2X + 1)\\
+Y_2 &= \beta_0 + \beta_1X + \beta_2X^2 - 2\beta_2X + \beta_2\\
+Y_2 &= \beta_0 + \beta_2 + (\beta_1 - 2\beta_2)X + \beta_2X^2\\
+Y_2 &= 1 - 2 + (1 - 2(-2))X + (-2)X^2\\
+y_2 &= -1 + 5X -2X^2
+\end{align}
+$$
+
+Based on this information, we expect a piecewise function that is a straight line with intercept = $\beta_0 = 1$ and slope $\beta_1 = 1$ prior to $X = 1$ and a quadratic curve after $X = 1$ with an offset of $\beta_0 + \beta_2$.
+
+```{r}
+x <- seq(-2, 2, by = 0.01)
+y <- sapply(x, function(x){
+  if (x < 1) { 1 + x } else { -1 + 5* x - 2 *x^2}
+})
+ggplot(data.frame(x = x, y = y), aes(x = x, y = y)) + 
+  geom_line() + 
+  geom_vline(xintercept = 1, color = 'red')
+```
+
+
+This choice of basis functions results in a fit that is continuous at the cutover point $c_1 = 1$. 
+
+## Exercise 04 - Basis Functions (Multi-Part Function)
+**Suppose we fit a curve with the basis functions**
+$$
+b_1(X) = I(0 \leq X \leq 2) - (X - 1)I(1 \leq X \leq 2)\\
+b_2(X) = (X - 3)I(3 \leq X \leq 4) + I(4 < X \leq 5)
+$$
+
+**We fit the linear regression model**
+$$
+Y = \beta_0 + \beta_1b_1(X) + \beta_2b_2(X) + \epsilon
+$$
+
+**and obtain coefficient estimates $\hat{\beta_0} = 1, \hat{\beta_1} = 1, \hat{\beta_2} = 3$.**
+
+**Sketch the estimated curve between $X = -2$ and $X = 6$. Note the intercepts, slopes, and other relevant information.**
+
+The first step is to substitute the basis functions in the linear model for $X \leq 2$
+$$
+\hat{y} = \beta_0 + \beta_1[I(0 \leq X \leq 2) - (X - 1)I(1 \leq X \leq 2)] + \beta_2[(X - 3)I(3 \leq X \leq 4) + I(4 < X \leq 5)]\\
+\text{For X} \leq 2\\
+\hat{y} = \beta_0 + \beta_1[I(0 \leq X \leq 2) - (X - 1)I(1 \leq X \leq 2)]\\
+\hat{y} = 1 + 1[I(0 \leq X \leq 2) - (X - 1)I(1 \leq X \leq 2)]\\
+$$
+
+- For all $X < 0$, neither indicator variable is true $\Rightarrow$ \hat{y} = 1 
+
+- For all $ X \in [0, 1]$, the first indicator variables is true. This makes the equation 
+$$
+\hat{y} = 1 + 1(1 + 0) = 2
+$$
+
+- For all $X \in [1, 2]$, both indicator variables are true. This makes the equation
+$$
+\hat{y} = 1 + 1[1 - (X - 1)] = 1 + 1 - X + 1 = 3 - X
+$$
+
+We do similar analysis for $X \geq 2$. 
+
+None of the indicator variables are going to be true between 2 and 3, so $\hat{y} = \beta_0 = 1$. 
+
+For $X \in [3, 4]$, $\hat{y} = \beta_0 + \beta_2[X - 3] = 1 + 3(X - 3) = -2 + 3X$
+
+For $X \in [4, 5]$, $\hat{y} = \beta_0 + \beta_2[1] = 1 + 3 = 4$
+
+For $X \in [5, 6]$, none of the indicator variables are active. So we assume $\hat{y} = \beta_0 = 1$.
+
+Generating the plot based on these rules
+```{r}
+x <- seq(-2, 6, by = 0.01)
+y <- sapply(x, function(x){
+    dplyr::case_when(
+    x < 0 ~ 1, 
+    x >= 0 & x <= 1 ~ 2, 
+    x >= 1 & x <= 2 ~ 3 - x, 
+    x >= 2 & x <= 3 ~ 1, 
+    x >= 3 & x < 4 ~ 2 - 3 * x, 
+    x >= 4 & x < 5 ~ 4, 
+    x > 5 & x <= 6 ~ 1, 
+    TRUE ~ 1
+  )
+})
+
+ggplot(data.frame(x = x, y = y), aes(x = x, y = y)) + 
+  geom_line() + 
+  geom_vline(xintercept = c(0, 1, 2, 3, 4, 5, 6), linetype = 'dotted', color = 'red')
+```
+
+Doesn't look right. Isn't continuous. All over the place.
+
+
+## Exercise 05 - More Smoothing Splines Analysis
+**Consider two curves \hat{g_1} and \hat{g_2} defined by**
+
+$$
+\begin{align}
+
+\hat{g_1} &= \text{arg} \underset{g}{min} \left( \sum_{i = 1}^N(y_i - g(x_i))^2 + \lambda\int[g^{(3)}(x)]^2dx\right)\\
+
+\hat{g_2} &= \text{arg} \underset{g}{min} \left( \sum_{i = 1}^N(y_i - g(x_i))^2 + \lambda\int[g^{(4)}(x)]^2dx\right)\\
+
+\end{align}
+$$
+Where $g^{(m)}$ represents the $m^{th}$ derivative of $g$. 
+
+The only difference between these two functions is that the penalty term minimises an integral of a different order of derivative. For $\hat{g_1}$ this is the 3rd order derivative, which means penalty forces $g$ to take a form with minimal variation in the 2nd derivative (as that would translate to 0 variation in 3rd derivative). This means the form of equation favoured by $\hat{g_1}$ will be somewhat quadratic. 
+
+By the same logic, $\hat{g_2}$ favours a cubic polynomial because expectation is that 4th derivative of a cubic polynomial will be 0. 
+
+The extent to which the chosen form of $\hat{g_1}$ or $\hat{g_2}$ will follow these quadratic or cubic ideals depends on the magnitude of the $\lambda$ parameter.
+
+### Part (a) 
+**As $\lambda \rightarrow \infty$, will $\hat{g_1}$ or $\hat{g_2}$ have the smaller training RSS?**
+
+$\lambda$ penalty is at maximum possible value so $\hat(g_1)$ and $\hat(g_2)$ become quadratic and cubic polynomials respectively. Of the two, **the cubic polynomial of $\hat{g_2}$is more flexible, and will be able to better fit to the training data, resulting in a lower training RSS**
+
+
+### Part (b)
+**As $\lambda \rightarrow \infty$, will $\hat{g_1}$ or $\hat{g_2}$ have the smaller test RSS?**
+
+The effect of the $\lambda$ penalty is still prevalent as discussed in part (b). However, apriori it is difficult to say which of the two curves will have a smaller test RSS. 
+
+If the true relationship in the data is close to linear or quadratic, then the quadratic form of $\hat{g_1}$ will have lower test RSS. If the true relationship is highly non-linear then the cubic form of $\hat{g_2}$ will have lower test RSS.
+
+As a general rule, though, we expect test RSS for the quadratic form of $\hat{g_1}$ to be lower because it is less flexible and thus has lower variance than the cubic $\hat{g_2}$.
+
+### Part (c) 
+**As $\lambda \rightarrow 0$, will $\hat{g_1}$ or $\hat{g_2}$ have the smaller training and test RSS?**
+
+With the penalty term becoming 0, there is no effect of the variability of the slope on the form of the function chosen. The only requirement is to minimise the training RSS. In this case, both curves will take the same form and try to interpolate as much of the training data as possible. Both will have similar training RSS and test RSS, although this test RSS will be extremely high. Assumption here is that the same form of $g$ is used in both cases.
+
+# Applied Exercises
+## Exercise 06 - Polynomial and Bin Regression -  `Wage`
+**In this exercise, you will further analyse the `Wage` data set considered throughout the chapter.**
+
+### Part (a)
+**Perform polynomial regression to predict the `wage` using `age`. Use cross-validation to select the optimal degree `d` for the polynomial. What degree was chosen? How does it compare to the results of the hypothesis testing using ANOVA? Make a plot of the resulting polynomial fit to the data.**
+```{r}
+# Seed random number generator
+set.seed(163)
+
+# Make a vector to store cross validated RMSE
+results.list <- c()
+
+# Use 5 fold validation with 20 degrees
+k.folds <- 5
+degrees <- seq(1, 15)
+
+# Iterate for 10 degree polynomials 
+for (d in degrees) {
+  # Fit a GLM with the age raised to degree `d` features
+  poly.glm <- glm(formula = wage ~ poly(age, degree = d, raw = TRUE), data = Wage)
+  cv.err <- cv.glm(data = Wage, glmfit = poly.glm, K = k.folds)
+  
+  # Append the cross-validation error to the list 
+  results.list <- c(results.list, cv.err$delta[1])
+}
+
+plot(degrees, results.list, type = 'b', xlab = 'Polynomial Degree', 
+     ylab = 'Cross Validated MSE', main = 'Wage - CV Error with Polynomial Degree')
+points(
+  which.min(results.list),
+  min(results.list), 
+  cex = 2,
+  pch = 20,
+  col = 'red'
+)
+
+```
+
+Based on cross-validation results, a 10th degree polynomial seems to give the lowest MSE. 
+
+Testing the same approach with `anova`.
+```{r}
+anova(
+  lm(wage ~ poly(age, 1), data = Wage),
+  lm(wage ~ poly(age, 2), data = Wage),
+  lm(wage ~ poly(age, 3), data = Wage),
+  lm(wage ~ poly(age, 4), data = Wage),
+  lm(wage ~ poly(age, 5), data = Wage),
+  lm(wage ~ poly(age, 6), data = Wage),
+  lm(wage ~ poly(age, 7), data = Wage),
+  lm(wage ~ poly(age, 8), data = Wage),
+  lm(wage ~ poly(age, 9), data = Wage),
+  lm(wage ~ poly(age, 10), data = Wage),
+  lm(wage ~ poly(age, 11), data = Wage),
+  lm(wage ~ poly(age, 12), data = Wage),
+  lm(wage ~ poly(age, 13), data = Wage),
+  lm(wage ~ poly(age, 14), data = Wage),
+  lm(wage ~ poly(age, 15), data = Wage)
+)
+```
+
+The null hypothesis for an `anova` that a model $\mathcal{M_1}$ is sufficient to explain relationship between predictor and response compared to $\mathcal{M_2}$. So the $p$-value is the probability of this null hypothesis being true (roughly speaking) i.e. for row `i`, it shows the probability that the null hypothesis for $\mathcal{M_{i-1}}$ being sufficient compared to $\mathcal{M_{i}}$.
+
+We can see that the $p$-values comparing models of degrees 1 - 3 are insignificant. The $p$-value for the hypothesis that suggests we should accept a degree 4 model in favour of a degree 3 model is just above the significance threshold. 
+
+After this degree, the $p$-values are consistently high until we reach the hypothesis which says we should reject the 8-degree polynomial in favour of the 9-degree polynomial, although this is below the 5% threshold for significance. 
+
+Immediately afterwards, the $p$-value for the null hypothesis that sates we should accept the 9-degree polynomial instead of a more complex 10-degree polynomial.
+
+In conclusion
+- CV suggests we should use a degree-10 polynomial, although degree 4 also has a very similar CV MSE. 
+
+- To minimise risk of overfitting, we should ideally use the 4-degree polynomial.
+
+- The `anova` test also supports this hypothesis, because complexity significance is first observed for the 4-degree polynomial.
+
+
+Fitting a degree 4 and degree 10 polynomial to the data to assess fit.
+```{r}
+ggplot(Wage, aes(x = age, y = wage)) + 
+  geom_point(alpha = 0.3) + 
+  geom_smooth(method = 'lm', formula = "y ~ poly(x, degree = 4, raw = T)", aes(col =' degree 4')) + 
+  geom_smooth(method = 'lm', formula = "y ~ poly(x, degree = 10, raw = T)", aes(col = 'degree 10'))
+```
+
+Both fits are very similar, but the 10-degree polynomial seems to overfit at the extreme values of `age`. 
+
+### Part (b) 
+**Fit a step function to predict `wage` using `age` and perform cross validation to choose the number of cuts. Make a plot of the fit obtained.**
+
+We repeat the same process as above, but this time use the `cut` command to make different intervals of `age`. 
+```{r}
+set.seed(163)
+cut.results <- c()
+cut.intervals <- seq(2, 20)
+k.folds <- 5
+
+for (c in cut.intervals) {
+  # We can't use the conventional process of fitting a linear model with cut
+  # and then passing this as an argument to cv.glm, because cv.glm will 
+  # implicitly call cut again for each training fold, resulting in different 
+  # levels. Solution is to initialize "global" levels ahead of splitting and 
+  # use them as predictors.
+  # See here: https://stats.stackexchange.com/questions/472385/why-does-the-glm-function-in-r-give-an-error-message-when-trying-to-fit-a-step
+  Wage$temp.age.levels <- cut(Wage$age, c)
+  glm.interval.fit <- glm(wage ~ temp.age.levels, data = Wage)
+  cv.err <- cv.glm(data = Wage, glmfit = glm.interval.fit, K = k.folds) 
+  cut.results <- c(cut.results, cv.err$delta[1])
+}
+
+# Rememebr to remove the temporary variable
+Wage$temp.age.levels <- NULL
+
+plot(cut.intervals - 1, cut.results, type = 'b', 
+     xlab = 'Cut Intervals', 
+     ylab = 'Cross-validated MSE', 
+     main = 'Wage - Cross-validated MSE against Intervals used to bin `cut`')
+points(which.min(cut.results), min(cut.results), pch = 20, col = 'red', cex = 2)
+```
+
+Cross-validation suggests that 15 intervals will result in the lowest outsample MSE. However, we can see that we get very similar MSE at 10 intervals and again at 12 intervals. Following the rule of thumb that simpler models = better models, it looks like 10 intervals is a better choice.
+
+Fitting both to the data and checking fit.
+```{r}
+ggplot(Wage, aes(x = age, y = wage)) + 
+  geom_point(alpha = 0.5) + 
+  geom_smooth(method = 'lm', formula = 'y ~ cut(x, 10)', aes(col = '10 intervals')) + 
+  geom_smooth(method = 'lm', formula = 'y ~ cut(x, 15)', aes(col = '15 intervals')) + 
+  labs(x = 'Age', y = 'Wage', title = 'Predicted Wage against Age for Different Binned versions of Age')
+```
+
+## Exercise 07: Non-linear Modeling - `Wage ` with new Features
+**The `Wage` data set contains a number of other features not explored in this chapter, such as marital status `marit1`, job class `jobclass`, and others. Explore the relationships between some of these predictors and wage, and use the non-linear fitting techniques in order to fit flexible models to the data. Create plots of the results obtained, and write a summary of your findings.**
+
+First, use a pairplot to get a high level overview of the relationships in the data.
+```{r}
+pairs(Wage)
+```
+
+
+Too many features for us to make an informed decision. Need to look at information feature by feature.
+```{r}
+# Make a list of features
+wage.features.cat <- colnames(Wage)[!(colnames(Wage) %in% c('wage', 'logwage', 'age', 'year'))]
+wage.features.num <- c('age', 'year')
+
+# Boxplots and pie charts for the categorical features
+for (feature in wage.features.cat) {
+  baseline.plot <- ggplot(Wage, aes(x = get(feature), group = get(feature), y = wage)) + 
+    geom_boxplot() + labs(x = feature, title = paste0("Feature Profile - ", feature))
+  
+  prop.plot <- ggplot(
+    Wage %>% dplyr::count(feature_cat = factor(get(feature))) %>%
+      dplyr::mutate(pct = n / sum(n) * 100),
+    aes(x = '', y = n, fill = feature_cat)) + 
+    geom_bar(stat = 'identity', width = 1) +
+    coord_polar("y", start = 0) 
+  
+  print(cowplot::plot_grid(baseline.plot, prop.plot, ncol = 2))
+}
+
+# Scatterplots for numeric features
+for (feature in wage.features.num) {
+  baseline.plot <- ggplot(Wage, aes(x = get(feature), y = wage)) + geom_point() + 
+    labs(x = feature, title = paste0("Feature Profile - ", feature))
+  print(baseline.plot)
+}
+```
+
+Based on these plots, the following feature engineering decisions might be useful
+1. `maritl`: combine `separated` and `divorced` into a single category because `divorced` has low volume but similar distribution over the target.
+2. `race`: similar treatment and for `black` and `other` categories.
+3. `age`: could use bins 10 bins instead of a continuous value, or use a polynomial transformation because it gave good RSS with earlier models.
+
+```{r}
+new.wage <- Wage %>% 
+  dplyr::mutate(
+    maritl = ifelse(maritl %in% c('4. Divorced', '5. Separated'), '6. Div_or_Sep', as.character(maritl)) %>% as.factor(),
+    race = ifelse(race %in% c('4. Other', '2. Black'), '5. black other', as.character(race)) %>% as.factor(),
+  )
+
+new.wage.model.01 <- glm(
+  wage ~ poly(age, 4, raw = T) + year + maritl + race + education + jobclass + health + health_ins, 
+  data = new.wage
+)
+
+# Same as before but with higher degree polynomial terms for age and some interaction terms
+new.wage.model.02 <- glm(
+  wage ~ poly(age, 10, raw = T) + year + maritl + race + education + jobclass + health + health_ins + 
+    maritl:health_ins + education:jobclass,
+  data = new.wage
+)
+
+new.wage.cv.01 <- cv.glm(data = new.wage, glmfit = new.wage.model.01, K = 5)
+new.wage.cv.02 <- cv.glm(data = new.wage, glmfit = new.wage.model.02, K = 5)
+
+new.wage.cv.01$delta
+new.wage.cv.02$delta
+anova(new.wage.model.01, new.wage.model.02)
+```
+
+
+Skipping to question 9 because I don't have time.
+
+## Exercise 09 - `Boston` Data Set
+**This question uses the variables `dis` (the weighted mean of distance to five Boston employment centers) and `nox` (nitrogen oxides concentration in PP10M) from the `Boston` data. We will treat `dis` as the predictor and `nox` as the response.**
+
+### Part (a) 
+**Use the `poly()` function to fit a cubic polynomial regression to predict `nox` using `dis`. Report the regression output, and plot the resulting data and polynomial fits.**
+
+```{r}
+# Train a model and report the cross-validated error
+boston.cubic.fit <- glm(nox ~ poly(dis, degree = 3, raw = TRUE), data = Boston) 
+boston.cubic.cv <- cv.glm(data = Boston, glmfit = boston.cubic.fit, K = 10)
+boston.cubic.cv$delta
+
+# What is the statistical significance of each term and training set performance
+summary(boston.cubic.fit)
+
+# Plot predictions 
+my.df <- data.frame(
+  x = Boston$dis, 
+  y = Boston$nox, 
+  y_pred = predict(boston.cubic.fit, newdata = Boston)
+)
+
+my.df %>% ggplot(aes(x = x)) + 
+  geom_point(aes(y = y, col = 'Original Data')) + 
+  geom_point(aes(y = y_pred, col = 'Degree 3 Polynomial')) +
+  geom_smooth(aes(y = y_pred, col = 'Degree 3 Polynomial'))
+
+```
+
+The regression output shows that all terms are statistically significant, and that the third degree polynomial follows the general trend of the data quite well. 
+
+### Part (b)
+**Plot the polynomial fits for a range of different polynomial degrees (from 1 - 10) and report the associated residual sum of squares.**
+```{r}
+model.rss <- c()
+for (d in 1:10) {
+  my.model <- lm(nox ~ poly(dis, degree = d, raw = TRUE), data = Boston)
+  my.model.rss <- sum(my.model$residuals^2)
+  
+  model.rss <- c(model.rss, my.model.rss)
+}
+
+plot(1:10, model.rss, type = 'b', xlab = 'Polynomial Degree', ylab = 'Training RSS',
+     main = 'Nox vs Poly(Dis, d) RSS')
+
+```
+
+### Part (c)
+**Perform cross validation or another approach to select the optimal degree for the polynomial and explain your results.**
+```{r}
+my.model.results <- c()
+
+for (d in 1:10) {
+  my.model <- glm(nox ~ poly(dis, degree = d, raw = TRUE), data = Boston)
+  my.model.cv <- cv.glm(data = Boston, glmfit = my.model, K = 5)
+  my.model.cv.mse <- my.model.cv$delta[1]
+  my.model.results <- c(my.model.results, my.model.cv.mse)
+}
+
+plot(1:10, my.model.results, type = 'b', xlab = 'Polynomial Degree', 
+     ylab = 'Cross-Validated MSE', main = 'Nox vs Poly(Dis, d) X-val RSS')
+points(which.min(my.model.results), min(my.model.results), col = 'red', pch = 20, cex = 2)
+```
+
+The training RSS decreases monotonically with increasing polynomial degree, because a higher polynomial degree allows the polynomial regressor to practically interpolate the data and minimise training RSS. However, such models have very high variance and overfit the training data, and don't generalize well to validation data.
+
+This is why cross-validated MSE shows a degree 3 polynomial has the smallest outsample or test MSE, and suggests that we should use a degree 3 polynomial to fit the data. 
+
+### Part (d)
+**Use the `bs()` function to fit a regression spline to predict `nox` using `dis`. Report the output for the fit using four degrees of freedom. How did you choose the knots? Plot the resulting fit.**
+
+A cubic spline - the default `bs` fit - with $K$ knots has $4 + K$ degrees of freedom. Since we want 4 degrees of freedom in the spline, this means the number of knots $K$ is 0. This in turn means **we don't have to choose any knots**. We can just fit a regular cubic polynomial.
+
+```{r}
+ggplot(Boston, aes(x = dis, y = nox)) +
+  geom_point() + 
+  geom_smooth(method = "lm", formula = "y ~ bs(x, df = 4)", aes(col = "B-spline (no knots)")) + 
+  labs(x = 'ds', y = 'nox', title = 'Cubic Regression through a Basis Spline')
+```
+
+### Part (e)
+**Now fit a regression spline for a range of degrees of freedom and plot the resulting fits and reporting the resulting RSS. Describe the results obtained.**
+```{r}
+my.model.results <- list()
+
+for (i in 3:15) {
+  my.model <- lm(nox ~ bs(dis, df = i), data = Boston)
+  my.model.results[[paste0('df_', sprintf("%02d", i))]] <- my.model
+}
+
+training.rss <- sapply(my.model.results, function(x){ sum(x[['residuals']]^2) })
+my.df <- data.frame(
+  model = names(my.model.results), 
+  train_rss = unname(training.rss)
+)
+
+my.df %>% ggplot(aes(x = model, y = train_rss, group = 'train_rss')) + 
+  geom_point() + geom_line() +
+  labs(x = 'Model', y = 'Training RSS', title = 'Training RSS by Degrees of Freedom in a Basis Spline')
+```
+
+As expected, as the degrees of freedom increase, the training RSS of the model decreases. This is because the model becomes increasingly flexible and capable of overfitting the data. However, this decrease is not monotonic: the training RSS actually increases for between degrees of freedom 8 and 9 and then again from 10 to 11. 
+
+### Part (f)
+**Perform cross-validation or another approach in order to select the best degrees of freedom for a regression spline on this data. Describe your results.**
+```{r}
+my.model.results <- c()
+
+degrees.of.freedom <- 3:15
+for (i in degrees.of.freedom) {
+  my.model <- glm(nox ~ bs(dis, df = i), data = Boston) 
+  my.model.cv.results <- cv.glm(data = Boston, glmfit = my.model, K = 5)
+  my.model.results <- c(my.model.results, my.model.cv.results$delta[1])
+}
+
+plot(x = degrees.of.freedom, my.model.results, xlab = 'Degrees of Freedom', 
+     ylab = 'X-Val MSE', 
+     main = 'X-Val MSE for Basis Splines of Different Degrees of Freedom', 
+     type = 'b')
+points(degrees.of.freedom[which.min(my.model.results)], min(my.model.results), 
+       col = 'red', pch = 20, cex = 2)
+```
+
+The cross-validated MSE suggests that the optimal degrees of freedom are around 12. However, based on the 1-SE rule for in cross-validated errors, we may also use the model 5 degrees of freedom because that has a comparable magnitude but less tendency to overfit.
+
+## Exercise 10: `College` GAMs
+**This question relates to the `College` data set.**
+### Part (a) 
+**Split the data into a training and test set. Use out-of-state tuition as the response and the other variables as the predictors to perform forward stepwise selection on the training set in order to identify a satisfactory model that uses just a subset of the predictors.**
+
+```{r}
+# Seed the random number generator before doing a 70/30 split
+set.seed(163)
+train.idx <- sample(nrow(College) * 0.7, replace = FALSE)
+test.idx <- (-train.idx)
+college.data.train <- College[train.idx, ]
+college.data.test <- College[test.idx, ]
+college.data.test.mat <-  model.matrix(Outstate ~., data = college.data.test)
+
+# Perform forward forward feature selection
+fwd.selection.fit <- regsubsets(
+  Outstate ~ .,
+  data = college.data.train, 
+  nvmax = 17, 
+  method = 'forward'
+)
+
+# Iterate over each best possible fit and calcualte the test set error 
+val.errors <- rep(NA, 17) # One for each variable size 
+for (i in 1:17) {
+  coef.i <- coef(fwd.selection.fit, id = i) 
+  pred.i <- college.data.test.mat[, names(coef.i)] %*% coef.i 
+  val.errors[i] <- mean((college.data.test$Outstate - pred.i)^2)
+}
+
+plot(val.errors, xlab = 'Subset Size', ylab = 'Test Set MSE',
+     main = 'College - Test Set MSE for Best Forward Selection Subset', type = 'b')
+points(which.min(val.errors), min(val.errors), col = 'red', pch = 20, cex = 2)
+
+# Which features are selected by the 
+```
+
+
+A 13-variable model has the lowest validation set MSE. However, We observe that the validation set MSE for the 6-variable model is practically the same. So technically it makes sense to use the 6-variable model because it's simpler and less likely to overfit. 
+
+### Part (b)
+**Fit a GAM on the training data, using out-of-state tuition as the resposne and the features selected in the previous step as predictors. Plot the results and explain your findings.**
+```{r}
+# Subset to the get the features from the previous model
+(best.subset.features <- names(coef(fwd.selection.fit, id = 6)))
+college.train.data.matrix <- model.matrix(Outstate ~., data = college.data.train)
+college.subset.train.data <- college.train.data.matrix[, best.subset.features]
+
+# Train a GAM with the these features: simplest approach is to use a natural spline
+# for all conitnuous features
+college.train.gam <- gam(
+  Outstate ~ Private + s(Room.Board) + s(PhD) + s(perc.alumni) + s(Expend) + 
+    s(Grad.Rate),
+  data = college.data.train
+)
+
+# Use `plot` to display the relationship between each spline and response
+par(mfrow = c(2, 3))
+plot(college.train.gam, se = T)
+```
+
+Individual splines don't seem to do that well at the extremities of their corresponding features. However, there is definitely a non-linear relationship here which the splines do capture. 
+
+### Part (c)
+**Evaluate the model obtained on the test set, and explain the results obtained.**
+```{r}
+# MSE
+mean((predict(college.train.gam, newdata = college.data.test) - college.data.test$Outstate)^2)
+
+# Generic form of R-squared: 1 - RSS / TSS 
+test_TSS <- sum((college.data.test$Outstate - mean(college.data.test$Outstate))^2)
+test_RSS <- sum((predict(college.train.gam, newdata = college.data.test) - college.data.test$Outstate)^2)
+1 - test_RSS/test_TSS
+```
+
+R-squared statistic looks quite good, however MSE is quite high. 
+
+### Part (d)
+**For which variables, if any, is there evidence of a non-linear relationship with the response?**
+```{r}
+summary(college.train.gam)
+```
+
+The `anova` for parametric effects summary shows that all predictors are statistically significant in the context of a linear relationship with the response. 
+
+However, `anova` for non-parametric effects' $p$-values correspond to a null hypothesis of a linear effect and therefore a small $p$-value provides evidence for the alternative hypothesis of a non-linear relationship. 
+
+The smallest $p$-value is for `Expend`, which means expenditure definitely has a non-linear relationship with the response. This is followed by `PhD` and `Grad.Rate` which are both below the 5% threshold. However, `perc.alumni` is not statistically significant as a non-linear predictor.
+
+## Exercise 11 - Backfitting GAMs
+**We will now explore backfitting in the context of multiple linear regression.**
+
+**Suppose that we would like to perform multiple linear regression, but don't have the software do to so. Instead, we only have software to perform simple linear regression. Therefore, we take the following approach:**
+**1. we repeatedly hold all but one coefficient estimate fixed at its current value**
+**2. we update that coefficient estimate using a simple linear regression**
+**3. we continue this process until convergence i.e. until the coefficient estimates stop changing.**
+
+**We now try this out on a toy example.**
+
+### Part (a)
+**Generate a response $Y$ and two predictors $X_1$ and $X_2$ with $n = 100$**.
+```{r}
+n <- 100
+x1 <- rnorm(n = n, mean = 16.3, sd = 1)
+x2 <- rnorm(n = n, mean = 19.4, sd = 1)
+eps <- rnorm(n = n, mean = 0, sd = 1)
+y <- 164 + 168 * x1 + 177 * x2 + eps
+```
+
+
+### Part (b) 
+**Initialize \hat{$\beta_1$| to be a value of your choice. It does not matter what value you choose.**
+```{r}
+beta.1 <- 10
+```
+
+
+### Part (c) 
+**Keeping $\hat{\beta_1}$ fixed, fit the model**
+$$
+Y - \hat{\beta_1}X_1 = \beta_0 + \beta_2X_2 + \epsilon
+$$
+
+```{r}
+# We find the residual between y and the product of our current estimate of 
+# beta and the corresponding predictor.
+my.resid <- y - beta.1 * x1 
+
+# We then fit a linear model to this residual as a function of the second predictor
+beta.2 <- lm(my.resid ~ x2)$coef[2]
+```
+
+### Part (d)
+**Keeping $\hat{\beta_2}$ fixed, fit the model**
+$$
+Y - \hat{\beta_2}X_2 = \beta_0 + \beta_1X_1 + \epsilon
+$$
+
+```{r}
+# Repeat the same process here 
+my.resid <- y - beta.2 * x2 
+beta.1 <- lm(my.resid ~ x1)$coef[2]
+```
+
+### Part (e) 
+**Write a for loop to repeat the steps in (c) and (d) 1000 times. Report the estimates of $\hat{\beta_1}$ and $\hat{\beta_2}$ at each iteration of the for loop. Create a plot in which each of these values is displayed, with $\hat{\beta_0}, \hat{\beta_1}, \hat{\beta_2}$ shown in a different color.**
+
+```{r}
+# Initialise vectors to store coefficient estimates
+all.beta.0 <- c()
+all.beta.1 <- c()
+all.beta.2 <- c()
+
+# Reinitialize beta.1 to the original value
+beta.1 <- 10
+
+for (i in 1:1000) {
+  # Fit residual as a function of beta.2
+  my.resid <- y - beta.1 * x1 
+  beta.2 <- lm(my.resid ~ x2)$coefficients[2]
+  all.beta.2[i] <- beta.2
+  
+  # Fit residual as a function of beta.1
+  my.resid <- y - beta.2 * x2
+  my.lm <- lm(my.resid ~ x1)
+  beta.1 <- my.lm$coefficients[2]
+  beta.0 <- my.lm$coefficients[1]
+  
+  # update history
+  all.beta.1[i] <- beta.1
+  all.beta.0[i] <- beta.0
+}
+
+coef.df <- data.frame(iter = 1:1000, 
+                      beta.0 = all.beta.0, beta.1 = all.beta.1, beta.2 = all.beta.2)
+
+# plot the variation in backfitted linear models 
+coef.df %>% 
+  data.table::melt(id.vars = 'iter') %>% 
+  ggplot(aes(x = iter, y = value, color = variable, group = variable)) +
+  geom_line() + 
+  labs(x = 'Iteration', y = 'Coefficient Value', 
+       title = 'Backfitting - Variation in Coefficient Estimates by Iteration')
+```
+
+### Part (f) 
+**Cmpare yur answer in (e) to the results of simply performing a multiple linear regression to predict $Y$ using $X_1$ and $X_2$. Use the `abline` function to overlay those multiple linear regression coefficient estimates on the plot obtained in (e).**
+```{r}
+my.lm.fit <- lm(y ~ x1 + x2)
+plot(coef(my.lm.fit), col = 'red')
+points(c(all.beta.0[1000], all.beta.1[1000], all.beta.2[1000]), cex = 2)
+```
+
+The final converged estimates shown in blue are exactly the same as the linear model estimates shown in red.
+
+### Part (g)
+**On this data set, how many backfitting iterations were required to obtain a good approximation to the multiple regression coefficient estimates?**
+
+6 iterations.
+
+## Exercise 12: Backfitting with $p = 100$
+**This problem is a continuation of the previous exercise. In a toy example with $p = 100$, show that one can approximate the multiple linear regression coefficient estimates by repeaedly performing simple linear regression in a backfitting procedure. How many backfitting iterations are required in order to obtain a "good" approximation to the multiple linear regression coefficient estimates? Create a plot to justify your answer.**
+
+```{r}
+set.seed(163) 
+
+# Simulate the coefficients
+beta.0.true <- 10
+beta.true <- rnorm(n = 100, mean = 16.3, sd = 19.4)
+
+# Generate a features matrix with p predictors
+X <- matrix(rnorm(5000 * 100, mean = 10, sd = 36), nrow = 5000, ncol = 100)
+
+# Generate random noise 
+eps <- rnorm(5000, mean = 0, sd = 9000)
+
+# Generate the response
+Y <- beta.0.true + X %*% beta.true + eps
+
+# To start off, we can easily fit a linear regressor to this data
+my.lm.fit <- lm(Y ~ X)
+summary(my.lm.fit)
+```
+
+For backfitting, initialize all the coefficients randomly. 
+```{r}
+beta.0.temp <- NA
+beta.all.temp <- rep(NA, 100)
+
+set.seed(163)
+beta.all.temp[2:100] <- rnorm(99)
+```
+
+Need to implement a nexted for loop.
+The outer for loop controls the number of backfitting iterations.
+Within each back fitting iteration, we iterate over all the predictors to compute residuals and fit linear models to them.
+```{r}
+# Initialize a matrix to store estimates for each predictor at each iteration
+beta.matrix <- matrix(nrow = 1 + 50, ncol = 1 + 100) 
+
+# First row is initialization
+beta.matrix[1, 3:101] <- beta.all.temp[2:100]
+
+for (i in 1:50) {
+  for (p in 1:100) {
+    residual.p <- Y - X[, -p] %*% beta.all.temp[-p]
+    beta.all.temp[p] <- lm(residual.p ~ X[, p])$coefficients[2]
+  }
+  
+  beta.0.temp <- lm(residual.p ~ X[, p])$coefficients[1]
+  
+  # Update the matrix
+  beta.matrix[i + 1, ] <- c(beta.0.temp, beta.all.temp)
+}
+```
+
+We can drop the first row of the `beta.matrix` because it has randomly initialized values of $\hat{\beta_j}\ \forall j \in [2, p]$ that were needed for the first iteration of the backfitting process.
+
+To test whether this was a good fit for the data or not, we can compare the RMSE between the coefficient estimates at each iteration.
+
+
+```{r}
+param.err <- c()
+
+# For each iteration
+for (i in 1:50) {
+  param.err.i <- sqrt(sum((beta.matrix[i, ] - my.lm.fit$coefficients)^2))
+  param.err[i] <- param.err.i
+}
+
+my.err.df <- data.frame(iteration = 1:50, param_err = param.err)
+my.err.df %>% ggplot(aes(x = iteration, y = param_err)) + 
+  geom_point() + 
+  geom_line() + 
+  labs(x = 'Iteration', y = 'RMSE(Coeff Values)', 
+       title = 'Backfitting on Simulated Data - Parameter Error Summary by Iteration')
+```
+
+It looks like parameter error drops literally after the first iteration.
+
+```{r}
+my.err.df %>% 
+  dplyr::filter(iteration < 5) %>% 
+  ggplot(aes(x = iteration, y = param_err)) + 
+  geom_point() + 
+  geom_line() + 
+  labs(x = 'Iteration', y = 'RMSE(Coeff Values)', 
+       title = 'Backfitting on Simulated Data - Parameter Error Summary by Iteration')
+```
+

@@ -1,0 +1,216 @@
+---
+title: "ISLR - Chapter 05 - Lab"
+author: "Saad M. Siddiqui"
+date: "3/13/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Example 01 - Validation Set Approach
+In this example, we explore the use of the Validation Set approach for estimating test error rates on the `auto` dataset through various linear models. 
+
+```{r}
+library(ISLR2)      # For Auto dataset 
+library(boot)       # For cv.glm function
+```
+
+## First Train-Validation Split
+```{r}
+# Seed the random number generator for reproducible results
+set.seed(1)
+
+# Initialise a vector of 197 values raning from 1 to 392. These will be used to subset
+# the data into a training set. The rest of the indices become the validation set.
+train <- sample(392, 196)
+
+# Fit a linear model to the training data subset 
+lm.fit <- lm(mpg ~ horsepower, data = Auto, subset = train)
+
+# Use the predict function to estimate the response for all observations
+# and then find MSE on the test observations by excluding `train` indices 
+mean((Auto$mpg - predict(lm.fit, Auto))[-train]^2)
+
+# Do the same thing for a quadratic polynomial
+lm.fit2 <- lm(mpg ~ poly(horsepower, 2), data = Auto, subset = train) 
+mean((Auto$mpg - predict(lm.fit2, Auto))[-train]^2)
+
+# Do the same thing for a cubic polynomial 
+lm.fit3 <- lm(mpg ~ poly(horsepower, 3), data = Auto, subset = train) 
+mean((Auto$mpg - predict(lm.fit3, Auto))[-train]^2)
+```
+The test MSE is highest with a linear model, an becomes approximately 19.8 with 2nd and 3rd order polynomial features. 
+
+## Second Train-Validation Split
+```{r}
+# Change the random number seed to make a different random training (and validation) set
+set.seed(2)
+train <- sample(392, 196)
+
+# Repeat the process again 
+lm.fit <- lm(mpg ~ horsepower, data = Auto, subset = train)
+lm.fit2 <- lm(mpg ~ poly(horsepower, 2), data = Auto, subset = train) 
+lm.fit3 <- lm(mpg ~ poly(horsepower, 3), data = Auto, subset = train)
+
+# Predictions of test MSE are now significantly different
+mean((Auto$mpg - predict(lm.fit, Auto))[-train]^2)
+mean((Auto$mpg - predict(lm.fit2, Auto))[-train]^2)
+mean((Auto$mpg - predict(lm.fit3, Auto))[-train]^2)
+```
+The overall results with the new train/validation sets are consistent with our earlier findings: test MSE is best with a quadratic polynomial, and worsens slightly with a cubic polynomial but is worst with the linear model. 
+
+# Example 02 - Leave-one-out Cross Validation (LOOCV)
+## GLM and LMs
+LOOCV can be computed automatically for any generalized linear model using the `glm` and `cv.glm` functions. 
+
+Using the `glm` function without specifying a family will let use the `cv` functionality of the `glm` API while still fitting a linear OLS model.
+```{r}
+# Compare the GLM coefficients to the LM coefficients
+glm.fit <- glm(mpg ~ horsepower, data = Auto) 
+coef(glm.fit) 
+
+# LM coefficients 
+lm.fit <- lm(mpg ~ horsepower, data = Auto) 
+coef(lm.fit)
+```
+
+## LOOCV - First Attempt 
+```{r}
+glm.fit <- glm(mpg ~ horsepower, data = Auto) 
+cv.err <- cv.glm(Auto, glm.fit) 
+cv.err$delta
+```
+
+The two numbers in the `delta` component contain the cross-validation results - in this case these are identical, and suggest that our LOOCV estimate for test error rate is 24.23. 
+
+`delta` is a vector length 2.
+- The first component is the raw cross-validation estimate of prediction error. 
+- The second component is the adjusted cross-validation estimate. 
+- The adjustment is designed to compensate for the bias introduced by not using leave-one-out cross-validation.
+
+However, the two numbers can also be different. To illustrate this, we fit progressively complex polynomial regression models from degree `1` to degree `10`. 
+```{r}
+# initialise a cv vector to store the deltas
+cv.error <- rep(0, 10) 
+
+# Fit progressively complex polynomial regressors 
+for (i in 1:10){
+  message("Fitting regressor of order ", i) 
+  glm.fit <- glm(mpg ~ poly(horsepower, i), data = Auto) 
+  cv.error[i] <- cv.glm(Auto, glm.fit)$delta[1]
+}
+
+round(cv.error, 2)
+```
+As was the case in figure 5.4 of the book, there is a sharp decline in test MSE from 1st to 2nd order but then MSE stagnates.
+
+# Example 03 - k-fold Cross Validation
+This can also be achieved using the `cv.glm` function. Here, we use $k = 10$, which is a common choice for the number of folds to perform cross-validation on.
+```{r}
+set.seed(17)                  # Initialise seed 
+cv.error.10 <- rep(0, 10)     # Initialise vector to store cross-validation errorrs 
+
+for (i in 1:10) {
+  glm.fit <- glm(mpg ~ poly(horsepower, i), data = Auto) 
+  cv.error.10[i] <- cv.glm(Auto, glm.fit, K = 10)$delta[1]
+}
+
+round(cv.error.10, 2)
+```
+Computation time for k-fold CV shows that this approach was much faster, as LOOCV does not use the leverage-based formual we saw earlier. 
+
+Results are still consistent with LOOCV. 
+
+# Example 04 - The Boostrap - Estimating Accuracy of Statistic of Interest
+In this example, we use the bootstrap to find the empirical estimate of the standard error for an  estimand using a common approach that involes 
+- defining the estimand in terms of a function 
+- using the estimand, a model object, and the `boot` function.
+
+Specfically, we use the `Portfolio` dataset in the `ISLR2` package which shows 100 simulated pairs of returns. For this, we're interested in finding the standard error of the parameter $\alpha$ which is given by 
+$$
+\alpha = \frac{\sigma_Y^2 - cov(X, Y)}{\sigma(X)^2 + \sigma(Y)^2 - 2\times cov(X, Y)}
+$$
+
+```{r}
+# Create a function that will return the estimand for each row in a dataframe
+alpha.fn <- function(data, index) {
+  X <- data$X[index] 
+  Y <- data$Y[index] 
+  
+  (var(Y) - cov(X, Y)) / (var(X) + var(Y) - 2 * cov(X, Y))
+}
+
+# Run this function for a set of indices
+alpha.fn(Portfolio, 1:100)
+```
+
+The next command used the `sample` function **randomly subset 100 observations** from range 1:100 **with replacement** - this is **bootsrapping**
+```{r}
+set.seed(7)
+alpha.fn(Portfolio, sample(100, 100, replace = T)) 
+```
+
+Can implement a bootstrap analysis by performing this command many times, recording all of the corresponding estimates for $\alpha$ and computing the standard deviation. 
+
+However, the `boot` function automates this process. 
+```{r}
+# Pass the Portfolio dataset to create 1000 samples of alpha computed using 1000 draws of 100 data points sampled with replacement
+boot(Portfolio, alpha.fn, R = 1000)   
+```
+The final output shows that using the original data, the estimate is $\hat\alpha$ = 0.5758 and the standard error in this estimate $SE(\hat\alpha)$ is 0.0897.
+
+# Example 05 - The Boostrap - Estimating Accuracy fo Linear Regression Model 
+We can also use the Boostrap approach to assess the standard error in the coefficient estimates of a linear model that uses `horsepower` to predict the `mpg` in the `Auto` dataset. 
+
+Specifically, we will compare the boostrap estimates of the standard errors in the coefficient and slope i.e. $SE(\hat\beta_0)$ and $SE(\hat\beta_1)$ with those computed analytically by linear regression.
+
+We first create a function `boot.fn` which uses the `Auto` dataset and indices of required observations to return the intercept and slope of the linear model. 
+
+We then apply this function to the full dataset of 392 observations in order to obtain the estmates of $\beta_0$ and $\beta_1$ using the OLS formulae. 
+```{r}
+boot.fn <- function(data, index) {
+  coef(lm(mpg ~ horsepower, data = data, subset = index))
+}
+
+boot.fn(Auto, 1:392)
+```
+`boot.fn` can also be used to create boostrap estimates for the same coefficients. 
+```{r}
+set.seed(1)
+boot.fn(Auto, sample(392, 392, replace = T))
+```
+Next, we use the `boot` function to compute the standard errors associated with these bootstrap estimates. 
+```{r}
+boot(Auto, boot.fn, 1000)
+```
+This indicates that the bootstrap estimates for the standard errors of the slope and cofficient are 0.860 and 0.0074 respectively.
+
+We can compare them to the same quantities computed with OLS.
+```{r}
+summary(lm(mpg ~ horsepower, data = Auto))$coef
+```
+The standard error for the intercept is 0.7178 compared to the boostrap estimate of 0.860, and the standard error for the slope is 0.0064 compares to the bootstrap estimate of 0.0074.
+
+We repeat the same process for a quadratic model to compare results.
+```{r}
+# Create function that will return coefficients that we want to analyse through bootstrapping
+boot.fn <- function(data, index) {
+  coef(lm(mpg ~ horsepower + I(horsepower ^ 2), 
+          data = data, 
+          subset = index ))
+}
+
+# Seed the random number generator for reproducible results
+set.seed(1) 
+
+# Pass the function to the `boot` function with the number of bootstrap samples 
+boot(Auto, boot.fn, 1000)
+
+# Compare to OLS estimates
+summary(lm(mpg ~ horsepower + I(horsepower ^ 2), data = Auto))$coef
+```
+The only slightly large difference appears in the standard error of the intercept term. The standard errors for the coefficient terms are practically the same with OLS and boostrapping.
+
+Likewise, the actual point estimates are identical as well.

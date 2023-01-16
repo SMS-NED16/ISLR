@@ -1,0 +1,46 @@
+---
+title: "ISLR - Chapter 10 - Lab"
+author: "Saad M. Siddiqui"
+date: "4/14/2022"
+output: 
+  html_document: 
+    toc: TRUE 
+    toc_depth: 2
+---
+
+```{r}
+library(ISLR2)
+library(ggplot2)
+library(dplyr)
+library(keras)
+library(glmnet)
+```
+
+```{r}
+Gitters <- na.omit(Hitters)
+n <- nrow(Gitters)
+set.seed(13)
+ntest <- trunc( n / 3)
+testid <- sample(1:n, ntest)
+
+lift <- lm(Salary ~., data = Gitters[-testid, ]) 
+lpred <- predict(lift, Gitters[testid, ]) 
+with(Gitters[testid, ], mean(abs(lpred - Salary)))
+```
+
+```{r}
+x <- scale(model.matrix(Salary ~. - 1, data = Gitters))
+y <- Gitters$Salary
+glm.fit <- cv.glmnet(x[-testid, ], y[-testid], type.measure = 'mae')
+cpred <- predict(glm.fit, x[testid, ], s = 'lambda.min')
+mean(abs(y[testid] - cpred))
+```
+
+
+```{r}
+mod.nn <- keras_model_sequential() %>% 
+  layer_dense(units = 50, activation = 'relu', input_shape = ncol(x)) %>% 
+  layer_dropout(rate = 0.4) %>% 
+  layer_dense(units = 1)
+```
+

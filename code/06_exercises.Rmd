@@ -1,0 +1,937 @@
+---
+title: "ISLR Chapter 6 - Exercises"
+author: "Saad M. Siddiqui"
+date: "4/3/2022"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 2
+---
+
+```{r setup, include=FALSE}
+rm(list = ls())
+knitr::opts_chunk$set(echo = TRUE)
+
+library(ISLR2)              # Book's library
+library(ggplot2)            # For visualizations
+library(dplyr)              # For data manipulation
+library(glmnet)             # For lasso and ridge regression
+library(leaps)              # For subset selection methods
+library(pls)                # For PCR an PLSR
+```
+
+
+# Conceptual Exercises
+## Exercise 01 - Feature Selection Methods
+**We perform best subset, forward stepwise, and backward stepwise selection on a single data set. For each approach, we obtain $p + 1$ models containing $0, 1, 2, ..., p$ predictors. For each of the following, explain your answers.**
+
+### Part (a)
+**Which of the three models with $k$ predictors has the smallest *training* RSS?**
+
+For the same number of predictors $k$, the full subset selection model will have the lowest training RSS. This is because full subset selection will fit models using all $2^k$ combination of predictors, and will attempt to minimise the training RSS. Forward and backward stepwise selection methods may result in similar models, but there will never be a subset of predictors used in forward or backward stepwise selection that won't already be considered and discovered through full subset selection.
+
+### Part (b) 
+**Which of the three models with $k$ predictors has the smallest *test* RSS?**
+
+Without additional information, cannot say for sure.
+
+Full subset selection is expected to have a lower test RSS for a given number of predictors $k$ because it will perform an exhaustive search over all $2^k$ variables to find the best model. It is possible that forward and backward stepwise selection will result in suboptimal models because these methods will not be able to remove features selected at earlier iterations even if they are detrimental to overall fit (e.g. don't decrease/actually increase MSE). 
+
+### Part (c)
+**Which of the following statements are true?**
+
+**1. The predictors in the $k$-variable model identified by forward stepwise selection are a subset of the predictors in the $(k + 1)$-variable model identified by forward stepwise selection.** 
+
+True. $(k + 1)$-variable predictor will contain all $k$ predictors from the $k$-variable model with one additional predictor as forward stepwise selection cannot drop predictors selected at earlier iterations.
+
+
+**2. The predictors in the $k$-variable model identified by backward stepwise selection are a subset of the predictors in the $(k + 1)$-variable model identified by backward stepwise selection.**
+
+True. All but one of the $(k + 1)$ variable model will also be present in the $k$-variable model, because with backward selection the least useful variable is removed at each iteration.
+
+
+**3. The predictors in the $k$-variable model identified by backward stepwise selection are a subset of the predictors in the $(k + 1)$ variable model identified by forward stepwise selection.**
+
+False. It is not necessary the variables in the $(k + 1)$-variable forward stepwise model to be identical to the variables in the $(k + 1)$-variable model through backward stepwise model. This, in turn, means that the $k$-variable model derived through backward stepwise selection may not have the same variables as the $k$-variable forward stepwise model. 
+
+Another way to think about this is that both methods start with different initial predictors (0 in the null model for forwards stepwise and $p$ predictors in the full model for backwards stepwise). It is unlikely, and not guaranteed, that the predictors dropped/removed at each iteration will be identical.
+
+
+**4. The predictors in the $k$-variable model identified by forward stepwise are a subset of the $(k + 1)$ variable model identified by backward stepwise selection.**
+
+False. Same as above.
+
+**5. The predictors in the $k$-variable model identified by best subset are a subset of the predictors in the $(k + 1)$-variable model identified by best subset selection.**
+
+False. This is not guaranteed. If it were, then we would never need to perform full subset selection.
+
+## Exercise 02 - OLS, Lasso, and Ridge Regression
+**For parts (a) through (c), indicate which of the following statements is correct for method X relative to method Y. Justify your answer.**
+
+**Relative to method Y, method X is**
+
+**1. More flexible and hence will give improved prediction accuracy when its increase in bias is less than its decrease in variance.** 
+
+**2. More flexible and hence will give improved prediction accuracy when its increase in variance is less than its decrease in bias.**
+
+**3. Less flexible and hence will give improved prediction accuracy when its increase in bias is less than its decrease in variance.** 
+
+**4. Less flexible and hence will give improved prediction accuracy when its increase in variance is less than its decrease in bias.**
+
+### Part (a)
+**Method X: Lasso | Method Y: OLS**
+
+Lasso is not more flexible than OLS because it sets the coefficients for several predictors to exactly zero. OLS will rarely ever do so. This, in turn, means Lasso regression will, in general, have higher bias and lower variance than OLS. 
+
+1. False because Lasso is less flexible than OLS
+2. False because Lasso is less flexible than OLS.
+3. True. Lasso is indeed less flexible than OLS, but this decreased flexibility will only translate to better predictive accuracy when the consequent decrease in variance is sufficiently large to compensate for the resulting increase in squared bias. 
+4. False. Lass is less flexible, but predictive accuracy improvements generally come from a decrease in variance, not a decrease in bias.  Bias for lasso regression is actually higher because a lot of coefficients are set to exactly 0 and thus there are stronger mathematical assumptions about the "form" of the function mapping predictors to responses.
+
+### Part (b)
+**Method X: Ridge | Method Y: OLS**
+
+Ridge regression is not more flexible than OLS because it constrains the magnitude of the coefficients of predictors to take smaller values subject to a constraint imposed by a $\lambda$ parameter. There is nothing stopping OLS from overfitting to noise in the data, but this is not the case for ridge regression. Ridge regression's improvement over OLS thus also comes from a decrease in variance. 
+
+1. False because ridge regression is not more flexible than OLS.
+2. False because ridge regression is not more flexible than OLS.
+3. True because ridge regression is indeed less flexible than OLS, and outperforms OLS by decreasing variance at the expense of a slight increase in bias. 
+4. False because while ridge regression is less flexible than OLS, the predictive accuracy improvement comes from a decrease in variance, not a decrease in bias.
+
+### Part (c)
+**Method X: Non-linear methods | Method Y: OLS**
+
+Non-linear methods are generally more flexible than OLS. They also have higher variance than OLS. These methods will only outperform OLS when the decrease in bias has a lower impact on error than the corresponding increase in variance. 
+1. False
+2. True
+3. False
+4. Flse
+
+## Exercise 03 - Lasso Regression Constraints
+**Suppose we estimat e the regression coefficients in a linear regression model by minimizing.**
+$$\sum\limits_{i = 1}^{n}(y_i - \beta_0 - \sum\limits_{j = 1}^{p}\beta_jx_{ij})^2$$
+**subject to the constraint**
+$$
+\sum\limits_{j = 1}^{p}|\beta_j| \leq s
+$$
+
+**for a particular value of $s$. For parts (a) through (e), indicate which of the following is correct. Justify your answer.**
+
+**1. Increase initially, and then eventually start decreasing in an inverted U-shape.**
+
+**2. Decrease initially, and then eventually start increasing in a U-shape.**
+
+**3. Steadily increase.**
+
+**4. Steadily decrease.**
+
+**5. Remain constant.**
+
+### Part (a)
+**As we increase $s$ from 0, the training RSS will**
+
+Minimising the expression subject to the provided constraint is equivalent to performing lasso regression. More specifically, as $s$ increases, the "budget" for magnitude of coefficients increases and the magnitudes of the coefficients can be as large as possible. Therefore, increasing $s$ essentially means decreasing the $\lambda$ parameter or the strength of regularization.
+
+In this case, as $s$ increases, regularization decreases, and the propensity of the model to overfit the data increases. Thus training RSS **steadily decreases**.
+
+### Part (b)
+**Repeat (a) for test RSS.**
+
+When $s$ = 0, the specified constraint means $\beta_j = 0 \ \forall j$. In this case, the model will be the null model where, regardless of predictors, $\hat{y} = \bar{y}$. Thus the test RSS will initially be high. As $s$ increases, model flexibility increases, resulting in a decrease in squared bias and an increase in variance. Up until a "sweet spot", the squared bias decrease will be larger than the increase in variance, causing test RSS to decrease. After this point, test RSS will increase. So the answer is **decrease initially and then initially start increasing in a U-shape**.
+
+### Part (c)
+**Repeat (a) for variance.** 
+
+Increasing $s$ means increasing model flexibility, and that translates to a steady increase in variance.
+
+### Part (d)
+**Repeat (a) for (squared) bias.**
+
+Increasing $s$ means increasing model flexibilty, and that translates to a steady decrease in bias.
+
+### Part (e)
+**Repeat (a) for irreducible error.**
+
+$$y = f(X) + \epsilon$$
+Irreducible error remains constant, regardless of the flexibility of the mode because it depends on the error introduced by unmeasured variables and spurious measurement errors in the data, which are both independent of the model flexibility. 
+
+## Exercise 04 - Ridge Regression Coefficients 
+**Suppos we estimate the regression coefficients in a linear regression model by minimizing**
+$$
+\sum\limits_{i = 1}^{n}(y_i - \beta_0 - \sum\limits_{j = 1}^{p}\beta_jx_{ij})^2 + \lambda \sum\limits_{j = 1}^{p}\beta_j^2
+$$
+**for a particular value of $\lambda$. For parts (a) through (e), indicate which of the following is correct. Justify your answer.**
+
+**1. Increases initially, and then eventually start decreasing in an inverted U-shape.**
+**2. Decrease initially, and then eventually start increasing in a U-shape.**
+**3. Steadily increase.**
+**4. Steadily decrease.**
+**5. Remain constant.**
+
+This equation describes the ridge regression coefficients for a linear model. $\lambda$ controls the strength of the regularization, the higher the value of $\lambda$ the greater the regularization and the smaller the values of the coefficients.
+
+### Part (a)
+**As we increase $\lambda$ from 0, what happens to the training RSS?**
+
+At $\lambda = 0$, the ridge regression coefficients are exactly the same as the OLS coefficient estimates because the regularization term will have been removed. The OLS estimates already minimize the training error, so there's no where for the training error to go but up. 
+
+As $\lambda \rightarrow \infty$, the coefficients $\beta_j \rightarrow 0$ which brings the model closer to the null model, at which point the training RSS will have increased. 
+
+So there's a steady increase in training RSS.
+
+### Part (b)
+**Repeat part (a) for test RSS.**
+
+As regularization increases, the test RSS will initially decrease before increasing again to form a U-shape. This is because the increase in squared bias due to coefficients approaching 0 will no longer be offset by the consequent decrease in variance.
+
+### Part (c)
+**Repeat part (a) for variance.**
+
+Variance will steadily decrease because increasing $\lambda$ means decreasing the flexibility of the model and its ability to overfit the data.
+
+### Part (d) 
+**Repeat part (a) for (squared) bias.**
+
+Squared bias will steadily increase as the model becomes increasingly inflexible.
+
+### Part (e)
+**Repeat part (a) for irreducible error.**
+
+As before, the irreducible error remains constant because it is independent of regularization and/or model flexibility.
+
+## Exercise 06 - Special Cases of Lasso and Ridge Regression
+**We will now consider a situation in which $n$, the number of examples, is the same as $p$, the number of predictors, and $\mathbf{X}$ is a diagonal matrix. We also assume that we are performing regression without an intercept, which means the least squares estimates can be found using**
+$$\sum\limits_{j = 1}^{p}(y_j - \beta_j)^2$$
+**which yields a least squares solution as follows**
+$$\hat\beta_j = y_j$$
+**And in this settings, *ridge regression* amounts to finding $\beta_1, ..., \beta_p$ such that**
+$$\sum\limits_{j = 1}^{p}(y_j - \beta_j)^2 + \lambda\sum\limits_{j = 1}^{p}\beta_j^2$$
+**Which is minimized by**
+$$\hat{\beta_j^R} = \frac{y_j}{1 + \lambda}$$
+
+**Likewise, the *lasso regression* amounts to finding $\beta_1, $\beta_2, ..., \beta_p$ such that**
+$$\sum\limits_{j = 1}^{p}(y_j - \beta_j)^2 + \lambda\sum\limits_{j = 1}^{p}|\beta_j|$$
+
+**Which is minimized by**
+\begin{equation}
+\hat{\beta_j^L} = 
+\begin{cases} 
+y_j - \frac{\lambda}{2} & \text{if} \ y_j > \frac{\lambda}{2} \\
+y_j + \frac{\lambda}{2} & \text{if} \ y_j < -\frac{\lambda}{2} \\       
+\ \ \ \ \ \ \ \ \ 0 & \text{if} \ |y_j| \leq \frac{\lambda}{2}
+\end{cases}
+\end{equation}
+
+### Part (a)
+**Consider the ridge regression coefficient with $p = 1$. For some choice of $y_1$ and $\lambda > 0$, plot the equation as a function of $\beta_1$. Your plot should confirm that the equation is solved by the provided ridge solution.**
+
+
+Assume $p$ = 1. This means 
+\begin{aligned}
+f(\beta) = (y_1 - \beta_1)^2 + \lambda\beta_1^2 
+\\
+f(\beta) = y_1^2 - 2 \beta_1 y_1 + \beta_1^2  + \lambda\beta_1^2
+\\
+f(\beta) = y_1^2 - 2 \beta_1 y_1 + (1 + \lambda)\beta_1^2
+\end{aligned}
+$
+Substituting $\lambda = 2$ and $y = 3$ in this equation gives us
+$
+\begin{aligned}
+f(\beta) = 9 - 2 \times \beta \times 3 + (1 + 2) \times \beta_1^2
+\\
+f(\beta) = 3\beta^2 - 6\beta + 9
+\end{aligned}
+
+
+Theoretically, the minimum value of $\beta$ is when 
+$$
+\beta = \frac{y}{1 + \lambda} = \frac{3}{1 + 2} = 1.333
+$$
+Verifying through code 
+```{r}
+beta <- seq(from = -0.5, to = 1.5, by = 0.1)
+f_beta <- 3 * beta^2 - 6 * beta + 9 
+
+theoretical.min.beta <- 3 / (1 + 2)
+actual.min.beta <- min(f_beta)
+
+data.frame(beta, f_beta) %>% 
+  ggplot(aes(x = beta, y = f_beta)) + 
+  geom_point() + 
+  geom_line() + 
+  geom_vline(aes(xintercept = theoretical.min.beta), color = 'red')
+```
+
+### Part (b)
+**Repeat the same process for the lasso equation.**
+
+For $p = 1$, the equation for the coefficients simplifies to 
+$$
+f(\beta) = y_1 - 2 \beta_1 y_1 + \beta_1^2 + \lambda |\beta_1|
+$$
+
+For supposed values $\lambda = 4, y_1 = 5$, we get 
+$$
+f(\beta) = \beta_1^2 - 10\beta_1 + 4|\beta_1| + 25 
+$$
+$y$ is greater than $\frac{\lambda}{2}$, so the minimum will occur at values of $\beta = y \frac{\lambda}{2}$ = $\beta = 5 - \frac{4}{2}$ = $3$.
+
+```{r}
+lambda <-4
+y <- 5
+beta <- seq(from = -1, to = 5, by = 0.1) 
+theoretical.min.beta <- y - lambda / 2
+f_beta <- beta ^ 2 - 10 * beta + 4 * abs(beta) + 25
+actual.min.beta <- min(f_beta)
+
+data.frame(beta, f_beta) %>% 
+  ggplot(aes(x = beta, y = f_beta)) + 
+  geom_point() + 
+  geom_line() + 
+  geom_vline(xintercept = theoretical.min.beta, color = 'red')
+```
+
+
+# Applied Exercises
+## Exercise 08 - Feature Selection on Simulated Data
+**In this exercise, we will generate simulated data and then use it to perform best subset selection.**
+
+### Part (a)
+**Use the `rnorm` function to generate a predictor $X$ of length $n = 100$, as well as a noise vector $\epsilon$ of length $n = 100$.**
+```{r}
+set.seed(1)
+X <- rnorm(100)
+epsilon <- rnorm(100, mean = 0, sd = 1)
+```
+
+### Part (b)
+**Generate a resposne vector $Y$ of length $n = 100$ according to the following model.**
+$$
+Y = \beta_0 + \beta_1X + \beta_2X^2 + \beta_3X^3 + \epsilon
+$$
+where $\beta_0$, $\beta_1$,$\beta_2$, and $\beta_3$ are constants of your choice.
+```{r}
+y <- 163 + 164 * X + 168 * X^2 + 177 * X^3 + epsilon
+```
+
+### Part (c)
+**Use the `regsubsets` function to perform best subset selection in order to choose the best model containing the predictors $X, X^2, ..., X^{10}$. What is the best model obtained according to $C_p$, BIC, and adjusted $R^2$? Show some plots to provide evidence.**
+```{r}
+poly.features <- poly(X, degree = 10, raw = TRUE)
+target <- y
+subset.fit <- regsubsets(
+  x = poly.features, y = target, 
+  nvmax = 10, method = 'exhaustive'
+)
+
+plot(subset.fit, scale = 'bic')
+plot(subset.fit, scale = 'Cp')
+plot(subset.fit, scale = 'adjr2')
+```
+The feature plot indicates that BIC and $C_p$ are both best for models that have features $X_1$, $X_2$, $X_3$, although others have the same error metrics as well.
+Further investigation required.
+```{r}
+summary(subset.fit)
+```
+Summary statistics show that the first three features appear in models of all sizes where $p \geq 3$.
+
+```{r}
+# Store the training set summary
+subset.summary <- summary(subset.fit)
+
+# Make plots for BIC, CP, Adjusted R-squared, and MSE
+par(mfrow = c(2, 2))
+plot(subset.summary$adjr2, type = 'b', 
+     xlab = 'Number of Variables', ylab = 'Adjusted R-squared')
+points(which.max(subset.summary$adjr2), 
+       subset.summary$adjr2[which.max(subset.summary$adjr2)], 
+       col = 'red', 
+       pch = 20, 
+       cex = 2)
+
+# For CP
+plot(subset.summary$cp, type = 'b', 
+     xlab = 'Number of Variables', ylab = 'Cp')
+points(which.min(subset.summary$cp), 
+       subset.summary$cp[which.min(subset.summary$cp)], 
+       col = 'red', 
+       pch = 20, 
+       cex = 2)
+
+# For BIC 
+plot(subset.summary$bic, type = 'b', 
+     xlab = 'Number of Variables', ylab = 'BIC')
+points(which.min(subset.summary$bic), 
+       subset.summary$bic[which.min(subset.summary$bic)], 
+       col = 'red', 
+       pch = 20, 
+       cex = 2)
+
+# For RSS
+plot(subset.summary$rss, type = 'b', 
+     xlab = 'Number of Variables', ylab = 'RSS')
+points(which.min(subset.summary$rss), 
+       subset.summary$rss[which.min(subset.summary$rss)], 
+       col = 'red', 
+       pch = 20, 
+       cex = 2)
+```
+The training set plots are somewhat inconclusive. RSS is lowest for the model that has all 10 variables, which we'd expect. Adjusted R-squared statistic and Cp are both lowest for the 4-variable model. BIC is lowest for 3-variable model. Cross-validation will give us a better estimate of the "correct" model to use.
+
+```{r}
+print("Coefficients for the 3-variable model")
+round(coef(subset.fit, id = 3), 2)
+
+print("Coefficients for the 4-variable model")
+round(coef(subset.fit, id = 4), 2)
+```
+In this case, it doesn't make a huge difference whether we choose the 3 variable or 4 variable model. Both have learnt approximately the right coefficients for the predictors of interest. The four variable model has an additional coefficient that is almost 0, and has negligible impact on final predictions.
+
+Ideally, this should be zeroed out by a lasso regression.
+
+### Part (d)
+**Now repeat part (d) using forward stepwise selection and backward stepwise selection. How does your answer compare to the reesults in (c)?**
+```{r}
+forward.subset.fit <- regsubsets(x = poly.features, y = target, nvmax = 10, method = 'forward')
+forward.subset.summary <- summary(forward.subset.fit)
+
+backward.subset.fit <- regsubsets(x = poly.features, y = target, nvmax = 10, method = 'backward')
+backward.subset.summary <- summary(backward.subset.fit)
+```
+
+#### Forward Selection
+```{r}
+par(mfrow = c(2, 2))
+plot(forward.subset.summary$adjr2, type = 'b', 
+   xlab = 'Number of Variables', ylab = 'Adjusted R-squared')
+points(which.max(forward.subset.summary$adjr2), 
+     forward.subset.summary$adjr2[which.max(forward.subset.summary$adjr2)], 
+     col = 'red', 
+     pch = 20, 
+     cex = 2)
+
+# For CP
+plot(forward.subset.summary$cp, type = 'b', 
+     xlab = 'Number of Variables', ylab = 'Cp')
+points(which.min(forward.subset.summary$cp), 
+       col = 'red', 
+       forward.subset.summary$cp[which.min(forward.subset.summary$cp)], 
+       pch = 20, 
+       cex = 2)
+
+# For BIC 
+plot(forward.subset.summary$bic, type = 'b', 
+     xlab = 'Number of Variables', ylab = 'BIC')
+points(which.min(forward.subset.summary$bic), 
+       forward.subset.summary$bic[which.min(forward.subset.summary$bic)], 
+       col = 'red', 
+       pch = 20, 
+       cex = 2)
+
+# For RSS
+plot(forward.subset.summary$rss, type = 'b', 
+     xlab = 'Number of Variables', ylab = 'RSS')
+points(which.min(forward.subset.summary$rss), 
+       forward.subset.summary$rss[which.min(forward.subset.summary$rss)], 
+       col = 'red', 
+       pch = 20, 
+       cex = 2)
+```
+
+#### Backward Selection
+```{r}
+par(mfrow = c(2, 2))
+plot(backward.subset.summary$adjr2, type = 'b', 
+   xlab = 'Number of Variables', ylab = 'Adjusted R-squared')
+points(which.max(backward.subset.summary$adjr2), 
+     backward.subset.summary$adjr2[which.max(backward.subset.summary$adjr2)], 
+     col = 'red', 
+     pch = 20, 
+     cex = 2)
+
+# For CP
+plot(backward.subset.summary$cp, type = 'b', 
+     xlab = 'Number of Variables', ylab = 'Cp')
+points(which.min(backward.subset.summary$cp), 
+       col = 'red', 
+       backward.subset.summary$cp[which.min(backward.subset.summary$cp)], 
+       pch = 20, 
+       cex = 2)
+
+# For BIC 
+plot(backward.subset.summary$bic, type = 'b', 
+     xlab = 'Number of Variables', ylab = 'BIC')
+points(which.min(backward.subset.summary$bic), 
+       backward.subset.summary$bic[which.min(backward.subset.summary$bic)], 
+       col = 'red', 
+       pch = 20, 
+       cex = 2)
+
+# For RSS
+plot(backward.subset.summary$rss, type = 'b', 
+     xlab = 'Number of Variables', ylab = 'RSS')
+points(which.min(backward.subset.summary$rss), 
+       backward.subset.summary$rss[which.min(backward.subset.summary$rss)], 
+       col = 'red', 
+       pch = 20, 
+       cex = 2)
+```
+
+Comparing all three methods 
+```{r}
+print("FULL SUBSET FIT COEFFICIENTS")
+coef(subset.fit, id = 3)
+
+print("\nFORWARD SELECTION COEFFICIENTS")
+coef(forward.subset.fit, id = 3)
+
+print("\nBACKWARD SELECTION COEFFICIENTS")
+coef(backward.subset.fit, id = 3)
+```
+
+Coefficients are too similar. 
+
+### Part (e) 
+**Now fit a lasso model to the simulated data, again using the same predictors. Use cross-validation to select the optimal value of $\lambda$. Create plots of the cross-valdation error as a function of $\lambda$. Report the resulting coefficient estimates, and discuss the results obtained.**
+```{r}
+# Make a model matrix 
+simulated.model.matrix <- model.matrix(
+  target ~ ., data = data.frame(poly.features, target)
+)[, -1]
+
+# Perform cross-validation with 10 folds
+set.seed(1)
+lambda.grid <- 10^seq(1,-2, length = 100) # 10 ^ seq(10, -2, length = 100)
+cv.lasso.fit.simulated <- cv.glmnet(
+  x = simulated.model.matrix,
+  y = target,
+  alpha = 1, 
+  nfolds = 10
+)
+
+# Get the optimal lambda and print the X-val error as a function of lambda
+optimal.lambda <- cv.lasso.fit.simulated$lambda.min
+print(paste0("Optimal lambda is ", round(optimal.lambda, 4)))
+
+# Generate plots
+plot(cv.lasso.fit.simulated)
+```
+The optimal value of $\lambda$ is 15.2275. This results in a model that has only 3 predictors - which is exactly what we wanted. In fact, the maximum degrees of freedom in our grid of $\lambda$ values is also 3, suggesting lasso regression is working.
+```{r}
+# Refit the model using the entire data
+lasso.fit.simulated <- glmnet(x = simulated.model.matrix, y = target, alpha = 1, lambda = optimal.lambda)
+coef(lasso.fit.simulated)
+```
+
+Coefficients for all predictors other than the ones that actually generated the data have been shrunk to zero.
+
+The coefficients that do exist are not very close to their actual values, though.
+
+### Part (f)
+**Now generate a response vector $Y$ according to the model**
+$$
+Y = \beta_0 + \beta_7X^7 + \epsilon
+$$
+
+**Perform best subset selection and lasso. Discuss the results obtained.**
+#### Preparation
+```{r}
+# Generate a new target 
+target <- 163 + 164 * X^7
+
+# Make a new data.frame 
+poly.features <- poly(X, degree = 10, raw = TRUE)
+my.df <- data.frame(poly.features, target)
+my.predictors <- model.matrix(target ~ ., data = my.df)[, -1]
+```
+
+#### Subset Selection
+```{r}
+subset.fit.simulated.v2 <- regsubsets(x = poly.features, y = target, nvmax = 10)
+subset.fit.simulated.v2.summary <- summary(subset.fit.simulated.v2)
+
+# Plots of best subsets 
+par(mfrow = c(2, 2))
+plot(subset.fit.simulated.v2.summary$adjr2, type = 'b', 
+   xlab = 'Number of Variables', ylab = 'Adjusted R-squared')
+points(which.max(subset.fit.simulated.v2.summary$adjr2), 
+     subset.fit.simulated.v2.summary$adjr2[which.max(subset.fit.simulated.v2.summary$adjr2)], 
+     col = 'red', 
+     pch = 20, 
+     cex = 2)
+
+# For CP
+plot(subset.fit.simulated.v2.summary$cp, type = 'b', 
+     xlab = 'Number of Variables', ylab = 'Cp')
+points(which.min(subset.fit.simulated.v2.summary$cp), 
+       col = 'red', 
+       subset.fit.simulated.v2.summary$cp[which.min(subset.fit.simulated.v2.summary$cp)], 
+       pch = 20, 
+       cex = 2)
+
+# For BIC 
+plot(subset.fit.simulated.v2.summary$bic, type = 'b', 
+     xlab = 'Number of Variables', ylab = 'BIC')
+points(which.min(subset.fit.simulated.v2.summary$bic), 
+       subset.fit.simulated.v2.summary$bic[which.min(subset.fit.simulated.v2.summary$bic)], 
+       col = 'red', 
+       pch = 20, 
+       cex = 2)
+
+# For RSS
+plot(subset.fit.simulated.v2.summary$rss, type = 'b', 
+     xlab = 'Number of Variables', ylab = 'RSS')
+points(which.min(subset.fit.simulated.v2.summary$rss), 
+       subset.fit.simulated.v2.summary$rss[which.min(subset.fit.simulated.v2.summary$rss)], 
+       col = 'red', 
+       pch = 20, 
+       cex = 2)
+
+# What is the model with the best R-squared
+print("Coefficients of the model with the best R-squared")
+coef(subset.fit.simulated.v2, id = 1)
+
+# What is the model with the best BIC
+print("Coefficients of the model with the best BIC")
+coef(subset.fit.simulated.v2, id = 5)
+```
+Subset selection's results with adjusted R-squared and Bayesian information criterion are mostly aligned. Both have practically zeroed out all coefficients except for the frst predictor $X^7$.
+
+#### Lasso Selection
+```{r}
+par(mfrow = c(1, 1))
+lambda.grid <- 10 ^ seq(10, -2, length = 100)
+cv.lasso.fit.simulated.v2 <- cv.glmnet(
+  x = my.predictors, y = target, 
+  alpha = 1,  nfolds = 5, lambda = lambda.grid
+)
+
+# What is the optimal lambda
+optimal.lambda <- cv.lasso.fit.simulated.v2$lambda.min
+print(paste0("The optimal value of lambda is ", round(optimal.lambda, 2)))
+
+# What is the cross-validated error for different lambda
+plot(cv.lasso.fit.simulated.v2)
+
+# Refit the model on the entire data
+lasso.fit.simulated.v2 <- glmnet(
+  x = my.predictors, y = target, alpha = 1
+)
+print("The coefficients of the optimal model are ")
+predict(lasso.fit.simulated.v2, s = optimal.lambda, type = "coefficients")
+
+```
+The lasso model has also chosen $X^7$ as the only predictor, but its coefficient estimates aren't very exact.
+
+## Exercise 09 - `College` Dataset 
+**In this exercise, we will predict the number of applications received using the other variables in the `College` dataset.**
+
+### Part (a)
+**Split the data into a training set and test set.**
+```{r}
+set.seed(1)
+train.ratio <- 0.8
+train.idx <- sample(x = 1:nrow(College), replace = FALSE, size = round(nrow(College) * train.ratio))
+test.idx <- (-train.idx)
+X.train <- College[train.idx, ][-2]
+y.train <- College[train.idx, 'Apps']
+
+X.test <- College[test.idx, ][-2]
+y.test <- College[test.idx, 'Apps']
+```
+
+### Part (b)
+**Fit a linear model using least squares on the training set, and report the test error obtained.**
+```{r}
+# Fit the model and examine predictors
+ols.college <- lm(Apps ~ ., data = College, subset = train.idx)
+summary(ols.college)
+
+# Check the MSE on the test set 
+y.pred <- predict(ols.college, X.test)
+ols.mse <- mean((y.test - y.pred)^2)
+print(paste0("Test MSE is ", round(mean((y.test - y.pred)^2), 2)))
+```
+
+### Part (c) 
+**Fit a ridge regression model on the training set with $\lambda$ chosen by cross-validation. Report the test error obtained.**
+```{r}
+# Make a model matrix 
+my.predictors.train <- model.matrix(Apps ~., data = College[train.idx, ])
+my.predictors.test <- model.matrix(Apps ~., data = College[test.idx, ])
+
+my.target.train <- y.train
+my.target.test <- y.test 
+
+# Make a grid of lambda values to use 
+lambda.grid <- 10 ^ seq(2,-2, length = 100)
+
+# Fit the ridge regression model
+cv.ridge.college <- cv.glmnet(
+  x = my.predictors.train, y = my.target.train, 
+  nfolds = 5, 
+  alpha = 0, 
+  lambda = lambda.grid
+)
+
+plot(cv.ridge.college)
+optimal.lambda <- cv.ridge.college$lambda.min
+
+# Refit with optimal lambda on the entire dataset
+ridge.college <- glmnet(x = my.predictors.train, 
+                        y = my.target.train, 
+                        alpha = 0)
+predict(ridge.college, s = optimal.lambda, type = 'coefficients')
+y.pred.ridge <- predict(ridge.college, s = optimal.lambda, newx = my.predictors.test)
+
+# Check MSE
+ridge.mse <- mean((y.test - y.pred.ridge)^2)
+print(paste0("Test Set MSE is ", round(ridge.mse, 2)))
+```
+### Part (d)
+**Fit a lasso model on the training set, with $\lambda$ choesn by cross-validation. Report the test error obtained, along with the number of non-zero coefficient estimates.**
+```{r}
+# Cross validate to get lambda
+cv.lasso.fit.college <- cv.glmnet(
+  x = my.predictors.train, 
+  y = my.target.train, 
+  lambda = lambda.grid, 
+  alpha = 1, 
+  nfolds = 10
+)
+
+# Find the optimal lambda 
+optimal.lambda <- cv.lasso.fit.college$lambda.min
+print(paste0("Optimal value of lambda is ", round(optimal.lambda, 2)))
+
+# Refit to entire training data 
+lasso.college <- glmnet(
+  x = my.predictors.train,
+  y = my.target.train, 
+  alpha = 1,
+  lambda = optimal.lambda
+)
+
+# Coefficients based on the optimal lambda 
+lasso.college.coefs <- predict(lasso.college, type = 'coefficients', s = optimal.lambda)
+print(paste0("Non zero coefficient count: ", length(lasso.college.coefs[lasso.college.coefs != 0])))
+
+# Test MSE 
+y.pred.lasso <- predict(lasso.college, type = 'response', s = optimal.lambda, newx = my.predictors.test)
+lasso.mse <- mean((y.test - y.pred.lasso)^2)
+print(paste0("Lasso MSE is ", round(lasso.mse, 2)))
+```
+
+### Part (e)
+**Fit a PCR model on the training set, with $M$ chosen through cross validation. Report the test error obtained, along with the value of $M$ selected by cross-valdation.**
+```{r}
+pcr.college <- pcr(Apps ~., data = College[train.idx, ], scale = T, 
+                   validation = 'CV')
+validationplot(pcr.college, val.type = 'MSEP')
+summary(pcr.college)
+```
+Based on the graph, the number of components chosen by cross-validation is $17$, which means barely any dimensionality reduction is taking place. 
+```{r}
+# Evaluate test MSE 
+y.pred.pcr <- predict(pcr.college, College[test.idx, ], ncomp = 17)
+pcr.mse <- mean((y.test - y.pred.pcr)^2)
+print(paste0("Test MSE is ", round(pcr.mse, 2)))
+```
+
+This MSE is exactly the same as the OLS MSE, which is expected because we are not performing any kind of dimensionality reduction so the PCR equation becomes equivalent to the OLS equation.
+
+### Part (f)
+**Fit a partial least squares (PLS) model on the training set, with $M$ chosen by cross-validation. Report the test error obtained, along with the value of $M$ selected by cross-validation.**
+```{r}
+pls.college <- plsr(Apps ~ ., 
+                    data = College[train.idx, ], 
+                    scale = T, 
+                    validation = 'CV')
+
+validationplot(pls.college, val.type = 'MSEP')
+```
+This is interesting because based on PLS there isn't much improvement in CV-MSE after $M = 5$ components, although the minimum CV MSE ocurs at 12 components. So going with $M = 12$.
+```{r}
+# Evaluate MSE 
+y.pred.pls <- predict(pls.college, data = College[test.idx, ], ncomp = 12)
+pls.mse <- mean((y.test - y.pred.pls)^2)
+print(paste0("Test MSE is ", round(pls.mse, 4)))
+```
+
+### Part (f)
+**Comment on the results obtained. How accurately can we predict the umber of college applications received? Is there much difference among the test errors resulting from these five approaches?**
+```{r}
+college.comparison.df <- data.frame(
+  method = c('OLS', 'Ridge', 'Lasso', 'PCR', 'PLS'), 
+  test_mse = c(ols.mse, ridge.mse, lasso.mse, pcr.mse, pls.mse),
+  test_rmse = sqrt(c(ols.mse, ridge.mse, lasso.mse, pcr.mse, pls.mse))
+)
+
+college.comparison.df
+```
+
+There isn't much difference in test MSE for OLS, Ridge, Lasso, and PCR regression. In fact, the OLS and PCR regression test MSEs are exactly the same. Overall, it seems ridge regression does much better than other methods. 
+
+Only exception is PLS, which is most likely due to an error in my code which I am too tired to debug at the moment.
+
+Given that mean value of applications received is ~3000, and test set RMSE are ~1200, the models aren't too bad.
+
+## Exercise 10: Subset Selection on Generated Data
+**We have seen that as the number of features used in a model increases, the training error will necessarily decrease, but the test error may not. We will now explore this in a simulated dataset.**
+
+### Part (a)
+**Generate a data set with $p = 20$ features and $n = 1000$ observations and associated quantitative response vector generated according to the model**
+$$
+Y = \beta X + \epsilon
+$$
+
+where $\beta$ has some elements that are exactly zero.
+```{r}
+set.seed(1) 
+p <- 20
+n <- 1000
+
+# Training data
+X <- matrix(
+  data = rnorm(n * p, mean = 0, sd = 1),
+  ncol = p, 
+  nrow = n
+)
+
+# Coefficient vector, with some elements set to 0 
+beta <- rnorm(p, mean = 1, sd = 2) 
+beta[c(2, 9, 14, 17)] <- 0
+
+# Random noise 
+epsilon <- rnorm(p, mean = 0, sd = 3)
+
+# Make the actual target
+Y = X %*% beta + epsilon
+```
+
+### Part (b)
+**Split your data set into a training set containing 100 observations and a test set containing 900 observations.**
+```{r}
+n.train <- 100
+train.idx <- sample(1:nrow(X), size = n.train)
+train.df <- data.frame(X, Y)[train.idx, ]
+test.df <- data.frame(X, Y)[-train.idx, ]
+```
+
+### Part (c)
+**Perform best subset selection on the training set, and plot the training MSE associated with the best model of each size.**
+```{r}
+best.subset.simulated <- regsubsets(
+  Y ~ ., data = train.df, nvmax = p, method = 'exhaustive'
+)
+best.subset.simulated.summary <- summary(best.subset.simulated)
+
+# Plotting the training MSE 
+plot(best.subset.simulated.summary$rss / n.train, type = 'b',
+     xlab = 'Number of Predictors', 
+     ylab = 'MSE')
+
+best.rmse.idx <- which.min(best.subset.simulated.summary$rss)
+best.rmse <- best.subset.simulated.summary$rss[best.rmse.idx] / n.train
+
+points(best.rmse.idx, best.rmse, col = 'red', pch = 20, cex = 2)
+```
+
+### Part (d)
+**Plot the test MSE associated with the best model of each size.**
+```{r}
+# Make a new test matrix where the intercept is always 1 and target is removed
+X_test <- cbind('(Intercept)' = 1,  as.matrix(test.df %>% dplyr::select(-Y)))
+
+# Preallocate a vector for storing MSE for the best model at each size 
+MSE_test <- c() 
+
+# Iterate over each model size in the model summary, and store its MSE by subsetting the required variables to compute predictions
+for (i in 1:ncol(best.subset.simulated.summary$outmat)) {
+  model.coef.i <- coef(best.subset.simulated, id = i)
+  predictors.i <- X_test[, colnames(X_test) %in% names(model.coef.i)]
+  pred.i <- predictors.i %*% model.coef.i
+  
+  MSE_test[i] <- mean((test.df$Y - pred.i)^2)
+}
+
+plot(MSE_test, type = 'b', xlab = 'Number of Predictors', ylab = 'Test MSE', 
+     main = 'Test MSE for best model with p predictors')
+
+points(
+  which.min(MSE_test), 
+  MSE_test[which.min(MSE_test)], 
+  col = 'red', 
+  pch = 20,
+  cex = 2
+)
+```
+
+### Part (e)
+**For which model size does the test MSE take on its minimum value? Comment on your results.**
+
+MSE is minimised with $p = 19$ predictors. For models with less than 10 predictors, the test MSE is quite high. It drops drastically from 4 to 10 predictors, and is then roughly constant at $\approx$ 9. This shows the model may be overfitting, but the impact on error isn't large.
+
+### Part (f)
+**How does the model at which the test MSE is minimised compare to the true model used to generate the data? Comment on the coefficient values.**
+```{r}
+actual.params <- c(0, beta) # Adding 0 for the intercept
+estimated.params <- coef(best.subset.simulated, id = 19)
+param.compare.df <- merge(
+  data.frame(idx = 1:length(actual.params), param = actual.params), 
+  data.frame(idx = 1:length(estimated.params), param = estimated.params), 
+  by = 'idx', 
+  all.x = T, 
+  suffixes = c('_actual', '_estim')
+) %>% 
+  replace(is.na(.), 0) # If param is missing from fit model, assume coef is 0
+
+param.compare.df %>% 
+  ggplot(aes(x = param_actual, y = param_estim)) + 
+  geom_point() + 
+  geom_abline(color = 'red')
+```
+
+Most estimates are quite close to their actual values. The best subset selection model does not seem to be systemically overestimating or underestimating the coefficients. There are only two estimated coefficients which are significantly far away from their actual coefficients. There is also only one param that is estimated to be 0 but actually has a significant non-zero value.
+
+### Part (g)
+**Create a plot displaying the following**
+$$
+\sqrt{\sum\limits_{j = 1}^{p}(\beta_j - \hat{\beta_j^r})^2}
+$$
+
+where $\hat\beta_j^r$ is the $j^{th}$ coefficient for the best model containing $r$ coefficients. Comment on what you observe. How does this compare to the MSE plot from (d)?
+```{r}
+# Make a vector to store the deviation between expected and actual params 
+param.errors <- c() 
+
+# Iterate over all the models fit 
+for (i in 1:20) {
+  # Make a dataframe of the original parameters
+  model.params.actual <- data.frame(
+    param_name = colnames(best.subset.simulated.summary$which)[-1],
+    param_value = beta
+  )
+  
+  # Make a similar data.frame for the estimated parameters
+  model.params.estim <- data.frame(
+    param_name = names(coef(best.subset.simulated, id = i)), 
+    param_value = coef(best.subset.simulated, id = i)
+  )
+  
+  # Merge them together
+  df.merge <- merge(model.params.actual, model.params.estim, 
+                    by = 'param_name', all.x = T, suffixes = c('_actual', '_estim')) %>% 
+    replace(is.na(.), 0)
+  
+  # For each such data.frame, calculate the MSE between the estimated and actual params
+  param.errors[i] <- sqrt(sum(df.merge$param_value_actual - df.merge$param_value_estim)^2)
+}
+
+plot(param.errors, type = 'b', xlab = 'Number of Predictors', ylab = 'Parameter RMSE',
+     main = 'Subset Selection - Parameter Magnitude RMSE by Subset Size')
+points(which.min(param.errors), param.errors[which.min(param.errors)], col = 'red', pch = 20, cex = 2)
+```
+
+This gives a slightly different picture than the one we saw in the target RMSE plot. In the target RMSE plot, the minimum error was recorded at $p = 19$. However, the minimum error in the magnitude of the parameters is recorded at $p = 14$. Ideally, the results of both investigations should be the same. It's possible the RMSE is being skewed by some data points, but the parameter estimates with $p = 14$ are, at the end of the day, more reliable.

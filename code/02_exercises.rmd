@@ -1,0 +1,414 @@
+---
+title: "02_exercises.rmd"
+author: "Saad M. Siddiqui"
+date: "1/2/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Conceptual Exercises 
+## Exercise 1
+**For each of parts (a) through (d), indicate whether we would generally expect the performance of a flexibile statistical learning method to be better or worse than an inflexible learning method. Justify your answer**.
+
+- **Part(a): The sample size $n$ is extremely large and the number of predictoes $p$ is small.**
+Flexible model will perform better than a less flexible model, because with fewer parameters it will be less likely to overfit the data, but with more training examples, it will still be able to fit complex/non-linear relationships with relatively low variance. 
+
+- **Part (b) The number of predictors $p$ is extremely large and the number of observations $n$ is small.**
+Flexible model will perform worse because it will be more likely to overfit the training data. 
+
+- **Part (c): The relationship between the predictors and the response is high non-linear.**
+Flexible model will perform better because with highr degrees of freedom or more parameters, it will be able to fit the non-linear relationships better. A less flexible model will have too high a bias for it to perform well on this dataset. 
+
+- **Part (d): The variane of the error terns i.e $\sigma^2 = Var(\epsilon)$ is extremely high**. 
+Flexible model will perform worse, because if the variance of the error terms is high, then there is a lot of noise in the dataset. A more flexible model with more degrees of freedom will be more susceptible to overfitting i.e. fitting to the noise rather than the underlying signal.
+
+
+## Exercise 2 
+**Explain whether eah scenario is a classification or regression problem, and indicate whether we are most interested in inference or prediction. Finally, provide $n$ and $p$**. 
+
+- **Part (a): We collect a set of data on the top 500 firms in the US. For each firm, we record profit, number of employees, industry, and the CEO salary.  We are interested in understanding which factors affect CEO salary.**
+  - Problem type: regression
+  - Use Case: inference
+  - Explanation: Target is CEO's salary, which based on the prompt is not a bucketed or a binned version but rather a continuous numerical quantity. We are not interested in predicting the salary but rather in understanding which factors affect it, which is textbook inference. 
+  - $n = 500, p = 3$
+
+- **Part (b): We are considering launching a new product and wish to know whether it will be a  *success* or *failure*. We collect data on 20 similar products that were previously launched. For each product, we have recorded whether it was a success or failure, price charged for the product, marketing budget, competition price, and ten other variables.**
+  - Problem type: classification 
+  - Use case: prediction
+  - Explanation: Target is a categorical variable: *success* or *failure*. Furthermore, we are only interested in accurately predicting this success or failure, and not in understanding what *caused* the success or failure. 
+  - $n = 20, p = 13$
+
+- **Part (c): We are interested in predicting the % change in the USD/Euro exchange rate in relation to the weekly changes in the world stock markets. Hence we collect data for all of 2012. For each week we record the % change in the USD/Euro, the % change in the US market, the % change in the British market, and the % change in the German market.**
+  - Problem type: regression
+  - Use case: prediction 
+  - Explanation: USD/Euro exchange rate is a continuous variable, and we are predicting it rather than trying to understand which predictor drove the exchange rate.     - $n = 52, $p = 3$
+  
+## Exercise 3: Bias/Variance Decomposition
+
+**We now revisit the bias-variance decomposition.**
+- **Part (a): Provide a sketch of the typical (squared) bias, variance, training error, test error, and Bayes (or irreducible error) curves on a single plot as we go from less flexible statistical learning methods to more flexible ones.**
+- **Part (b): Explan why each of the curves has the shape displayed in the sketch from part (a).**
+
+  - **$Bias^2$**: Initially high because real-world phenomenon are often too complex to be modeled with simple statistical models having low degrees of freedom/flexibility. As degrees of freedom increase, the flexibility of the model also increases, and the model becomes parameterically complex enough to model the phenomenon.
+  - **Variance**: With very few degrees of freedom or low flexibility, a model will have very low variance: different instances of the model trained with slightly different subsets of the training data will not produce significantly different $\hat{f}$. However, as degrees of freedom increase, the model becomes capable of tracking minor variations or noise in the data more closely, which leads to variance increasing: even a small shift in the distribution of subset of data used to train model will produce a very different $\hat{f}$.
+    - **Training Error**: Will monotonically increase with flexibility or degrees of freedom as the model will be optimised to minimise its training set error rate, even if this comes at the expense of the model fitting to noise in the data. 
+    - **Test Error**: Generally higher than training error and always higher than the irreducible error. Will decrease until an optimal level of flexibility until the decrease in bias per additional degree of freedom is too small to compensate for increase in error introduced by $Var(\hat{f})$. 
+    - **Irreducible error**: Constant, regardless of the complexity of the model.
+    
+    
+## Exercise 4: Real-life Applications ##
+**You will now think of some real-life applications for statistical learning.**
+
+- **Part (a): Describe three real-life applications where classification might be useful. Describe the response as well as the predictors. Is the goal of each application inference or prediction? Explain your answer.**
+  - Example 1: Classifying email as ham or spam.
+    - Response: Is email spam (1) or not spam/ham (0)
+    - Predictors: Email body, header, metadata, embedding, email content tokenized as bag of words, etc. 
+    - Goal: prediction 
+  - Example 2: Electricity Theft Detection
+    - Response: Is a given timeseries data of kWh readings indicative of theft (1) or not (0)? 
+    - Predictors: Timeseries data of electrical power consumption in kWh 
+    - Goal: Prediction
+  - Example 3: Cancer Type Detection
+    - Response: Which category of cancer does the patient have?
+    - Predictors: Demographic data, gene expression data, cancer histology data
+    - Goal: Prediction or inference
+
+- **Part (b): Describe three real-life applications where regression might be useful. Describe the response as well as the predictors. Is the goal of each application application or inference? Explain your answer.**
+  - Example 1: Predicting housing prices 
+    - Response: Price of a house in 1000s of USD 
+    - Predictors: Acreage/area, number of bedrooms, age of house, proximity to river or ocean, neighborhood affluence, air quality, access to public transport, etc.
+    - Goal: Prediction or inference 
+  - Example 2: Object Localization
+    - Response: Coordinates, width, and height of bounding box/rectangle to be drawn around an object.
+    - Predictors: Matrix or multidimensional array of dimensions $[width, height, channels]$
+    - Goal: Prediction 
+  - Example 3: Customer Lifetime Prediction
+    - Response: Number of months a customer is expected to stay subscribed before churn
+    - Predictors: Demographic data, product subscriptions, customer complaint history, number of times customer has defaulted on bills.
+    
+- **Part (c): Describe three real-life applications where *cluster analysis* might be useful.*.
+  - Customer segmentation
+  - Market basket analysis: which products are bought together?
+  - Automated photo-tagging applications: cluster similar images and allow user to assign one label to all of them. 
+  
+## Exercise 5: Flexible Models##
+
+**What are the advantages and disadvantage sof a very flexible approach for regression or classification? Under what circumstances might a more flexible approach be preferred to a less flexible approach, and vice versa?**
+
+- Flexible models: can fit highly non-linear underlying relationships between predictors and response, which can improve predictions. More likely to overfit because of high variance, less interpretable, generally take longer to train and predict at runtime. 
+- Non-flexible models: Won't be able to fit highly non-linear underlying signals in data, and will have high $bias^{2}$  error for such datasets. However, will produce interpretable results which can be useful for inference. Can also produce models that easier to debug in case of anomalous predictions.
+- Generally, better to use more flexible approaches when
+  - have a lot of data
+  - don't have too many predictors
+  - data is expected to have highly non-linear relationships between predictors and response
+  - *black box* models are acceptable i.e. goal is better predictions rather than interpretable predictions. 
+  
+
+## Exercise 6: Parametric vs Non-Parametric Models##
+
+**Describe the differences between a parametric and non-parametric statistical learning approach. What are the advantages and disadvantages of a parametric approach to regression or classification?**
+
+- Parametric methods assume the relationship between the predictors $\mathbf{X}$ and response $\Y$ is a function of some known, pre-assumed form $f$ parameterized by weights or parameters $\theta$.
+- $\mathbf{Y} = \hat{f}(\mathbf{X}, \theta)$
+- *Fitting* a parametric model involves using an iterative method like OLS or gradient descent to find the values of the parameters $\theta$ that minimize some measure of loss/error over the training set. 
+- Advantage: Simplifies the problem of estimating $\rhat{f}$ to a problem of deriving good estimates for a finite set of parameters $\theta$, which can often be done analytically or numerically. 
+- Disadvantage: Assumption of a particular form for $\hat{f}$ can often result in very high bias if choice of statistical method is incorrect. 
+- Non-parametric models assume no functional form for the relationship between $\mathbf{Y}$ and $\mathbf{X}$, and instead try to model the data using user-defined hyperparameters.
+- Advantage: No chance of high bias due to incorrect pre-conceived notion of correct form for $\hat{f}$. 
+- Disadvantage: Require a lot of training data. 
+
+## Exercise 7: K-Nearest Neighbors ##
+** The table below provides a training data set containing six observations, three predictors, and one qualitatve response variables. **
+
+| Obs. | X_1 | X_2 | X_3 |   Y   |
+|:----:|:---:|:---:|:---:|:-----:|
+|   1  |  0  |  3  |  0  |  Red  |
+|   2  |  2  |  0  |  0  |  Red  |
+|   3  |  0  |  1  |  3  |  Red  |
+|   4  |  0  |  1  |  3  |  Red  |
+|   5  |  -1 |  0  |  1  | Green |
+|   6  |  1  |  1  |  1  |  Red  |
+
+**Suppose we wish to use this data set to make a prediction for $\mathbf{Y}$ when $X_1 = X_2 = X_3 = 0$ using K-nearest neighbors.** 
+
+**Part (a): Compute the Euclidean distance between each observation and the test point.**
+```{r}
+library(dplyr)
+
+# Make a training data frame 
+data.df <- data.frame(
+  obs = 1:6, 
+  X1 = c(0, 2, 0, 0, -1, 1), 
+  X2 = c(3, 0, 1, 1, 0, 1), 
+  X3 = c(0, 0, 3, 2, 1, 1), 
+  Y = c('Red', 'Red', 'Red', 'Green', 'Green', 'Red')
+)
+```
+
+```
+print(data.df) 
+```
+
+```{r}
+# Make another object for the test data point 
+test.data <- list('X1' = 0, 'X2' = 0, 'X3' = 0) 
+
+# Compute the Euclidean distance of each point from the test point 
+data.df[['dist_to_test_point']] = sqrt(
+  (data.df$X1 - test.data$X1)^2 +
+    (data.df$X2 - test.data$X2)^2 + 
+    (data.df$X3 - test.data$X3)^2
+)
+
+# For simplifying KNN exercises, sort by lowest distance 
+print(data.df %>% dplyr::arrange(dist_to_test_point))
+```
+
+
+**Part (b): What is our prediction with K = 1? Why?**
+
+Green because the nearest neighbor is observation 5 with a distance of 1.414 and class of Green.
+
+**Part (c): What is our prediction with K = 3? Why?
+**
+
+Red because of the three neighbors closest to the data point (5, 6, 2), two have a class of Red. 
+
+**Part (d): If the Bayes decision boundary in this problem is highly non-linear, then would we expect the *best* value for K to be large or small? Why?**
+
+The Bayes decision boundary is the "gold standard" of the decision boundary that would have been output by a classification algorithm which new the probability distributions of each class apriori. 
+
+If the Bayes decision boundary is highly non-linear, then with the ideal number of nearest neighbors, the KNN decision boundary should also be highly non-linear. 
+
+The KNN decision boundary is highly linear only when the number of neighbors $K$ is small, because the $argmax$ over the classes of fewer neighbors will produce a noiser, more variable decision boundary, whereas $argmax$ over the classes of more neighbors will produce a smoother decision boundary.
+
+# Applied Exercises 
+## Exercise 8: `College` Dataset 
+```{r}
+# Read the data into R
+college <- read.csv("./data/College.csv")
+
+# First column is just the names of the colleges - change these to row names rather than a separate column
+rownames(college) <- college[, 1]
+college <- college[, -1]
+# View(college)
+
+# Use the summary function to produce a numerical summary of the variables in the dataset 
+summary(college)
+
+# Use the pairs function to produce a scatterplot matrix of the first ten columns or varables 
+pairs(college[, 1:10])
+```
+
+```{r}
+# Use the `plot` function to produce side-by-side boxplots of `Outstate` versus `Private`
+boxplot(college$Outstate, college$Private, xlab = 'Private (Indicator)', ylab = 'Outstate Tuition', 
+        main = 'Boxplot - Outstate Tuition by Private Indicator Variable')
+```
+
+```{r}
+# Create a new qualitative variable called Elite by binning the Top10Perc variable
+# If percentage of students coming from top 10% of their high school exceeds 50%, then a college is elite
+college[['Elite']] <- as.factor(ifelse(college$Top10perc > 50, "Yes", "No"))
+
+# Use the `summary` function to see how many elite universities there are 
+summary(college$Elite)
+
+# Now use the `plot` function to produce side-by-side boxplots of Outstate versus Elite 
+boxplot(college$Outstate, college$Elite)
+```
+```{r}
+# Use hist function to plot histograms for quantitative variables 
+par(mfrow = c(2, 2))
+hist(college$Apps, main = "Applications", breaks = 25)
+hist(college$Accept, main = "Acceptance Rate", breaks = 50)
+hist(college$Outstate, main = "Outstate Tuition", breaks = 20)
+hist(college$Enroll, main = "Enrolled", breaks = 40)
+```
+
+## Exercise 9: `Auto` Dataset 
+```{r}
+auto <- read.csv("./data/Auto.csv", header = TRUE, stringsAsFactors = TRUE, na.strings = "?")
+colSums(is.na(auto))      # Before dropping NAs
+auto <- 
+  (auto)
+colSums(is.na(auto))      # After dropping NAs
+```
+```{r}
+# Which predictors are quantitative
+str(auto)
+numeric.predictors <- c(
+  'cylinders', 'displacement', 'horsepower', 'weight', 'acceleration', 'year'
+)
+
+categorical.predictors <- c('name', 'origin')
+
+# What is the range, mean, and standard deviation of each of each quantitative predictor 
+auto %>% 
+  summarise_at(numeric.predictors, funs(mean, sd, range))
+```
+```{r}
+# Now remove the 10th through 85th observations. What are th range, emean, and standard eeviation of each predictor in the subset of the data that remains 
+auto[-c(10:85), ] %>%
+  summarise_at(numeric.predictors, funs(mean, sd, range))
+```
+
+```{r}
+# Predicting gas mileage as a function of the other variables 
+lm_gas_mileage <- lm(mpg ~ cylinders + displacement + horsepower + weight + acceleration + year + origin, data = auto)
+lm_gas_mileage$coefficients
+```
+
+## Exercise 10: `Boston` dataset 
+```{r}
+# Load the data
+library(ISLR2)
+
+dim(Boston)   # 506 rows, 13 columns
+```
+```{r}
+# Pair plots 
+pairs(Boston)
+```
+```{r}
+# Which variables are associated with per-capita crime rate?
+
+# Using best_predictor function from https://rpubs.com/lmorgan95
+best_predictor <- function(dataframe, response) {
+  
+  if (sum(sapply(dataframe, function(x) {is.numeric(x) | is.factor(x)})) < ncol(dataframe)) {
+    stop("Make sure that all variables are of class numeric/factor!")
+  }
+  
+  # pre-allocate vectors
+  varname <- c()
+  vartype <- c()
+  R2 <- c()
+  R2_log <- c()
+  R2_quad <- c()
+  AIC <- c()
+  AIC_log <- c()
+  AIC_quad <- c()
+  y <- dataframe[ ,response]
+  
+  # # # # # NUMERIC RESPONSE # # # # #
+  if (is.numeric(y)) {
+    
+    for (i in 1:ncol(dataframe)) {
+      
+      x <- dataframe[ ,i]
+      varname[i] <- names(dataframe)[i]
+      
+      if (class(x) %in% c("numeric", "integer")) {
+        vartype[i] <- "numeric"
+      } else {
+        vartype[i] <- "categorical"
+      }
+      
+      if (!identical(y, x)) {
+        
+        # linear: y ~ x
+        R2[i] <- summary(lm(y ~ x))$r.squared 
+        
+        # log-transform: y ~ log(x)
+        if (is.numeric(x)) { 
+          if (min(x) <= 0) { # if y ~ log(x) for min(x) <= 0, do y ~ log(x + abs(min(x)) + 1)
+            R2_log[i] <- summary(lm(y ~ log(x + abs(min(x)) + 1)))$r.squared
+          } else {
+            R2_log[i] <- summary(lm(y ~ log(x)))$r.squared
+          }
+        } else {
+          R2_log[i] <- NA
+        }
+        
+        # quadratic: y ~ x + x^2
+        if (is.numeric(x)) { 
+          R2_quad[i] <- summary(lm(y ~ x + I(x^2)))$r.squared
+        } else {
+          R2_quad[i] <- NA
+        }
+        
+      } else {
+        R2[i] <- NA
+        R2_log[i] <- NA
+        R2_quad[i] <- NA
+      }
+    }
+    
+    print(paste("Response variable:", response))
+    
+    data.frame(varname, 
+               vartype, 
+               R2 = round(R2, 3), 
+               R2_log = round(R2_log, 3), 
+               R2_quad = round(R2_quad, 3)) %>%
+      mutate(max_R2 = pmax(R2, R2_log, R2_quad, na.rm = T)) %>%
+      arrange(desc(max_R2))
+    
+    
+    # # # # # CATEGORICAL RESPONSE # # # # #
+  } else {
+    
+    for (i in 1:ncol(dataframe)) {
+      
+      x <- dataframe[ ,i]
+      varname[i] <- names(dataframe)[i]
+      
+      if (class(x) %in% c("numeric", "integer")) {
+        vartype[i] <- "numeric"
+      } else {
+        vartype[i] <- "categorical"
+      }
+      
+      if (!identical(y, x)) {
+        
+        # linear: y ~ x
+        AIC[i] <- summary(glm(y ~ x, family = "binomial"))$aic 
+        
+        # log-transform: y ~ log(x)
+        if (is.numeric(x)) { 
+          if (min(x) <= 0) { # if y ~ log(x) for min(x) <= 0, do y ~ log(x + abs(min(x)) + 1)
+            AIC_log[i] <- summary(glm(y ~ log(x + abs(min(x)) + 1), family = "binomial"))$aic
+          } else {
+            AIC_log[i] <- summary(glm(y ~ log(x), family = "binomial"))$aic
+          }
+        } else {
+          AIC_log[i] <- NA
+        }
+        
+        # quadratic: y ~ x + x^2
+        if (is.numeric(x)) { 
+          AIC_quad[i] <- summary(glm(y ~ x + I(x^2), family = "binomial"))$aic
+        } else {
+          AIC_quad[i] <- NA
+        }
+        
+      } else {
+        AIC[i] <- NA
+        AIC_log[i] <- NA
+        AIC_quad[i] <- NA
+      }
+    }
+    
+    print(paste("Response variable:", response))
+    
+    data.frame(varname, 
+               vartype, 
+               AIC = round(AIC, 3), 
+               AIC_log = round(AIC_log, 3), 
+               AIC_quad = round(AIC_quad, 3)) %>%
+      mutate(min_AIC = pmin(AIC, AIC_log, AIC_quad, na.rm = T)) %>%
+      arrange(min_AIC)
+  } 
+}
+
+Boston$chas <- factor(Boston$chas)
+for (i in setdiff(1:ncol(Boston), 4)) { # excluding 'chas' as it uses different eval metric
+  response <- names(Boston)[i]
+  predictor_info <- best_predictor(Boston, names(Boston)[i])[1, -2]
+  predictor_df <- rbind(predictor_df, cbind(response, predictor_info))
+}
+```

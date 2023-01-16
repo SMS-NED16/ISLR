@@ -1,0 +1,553 @@
+---
+title: "ISLR - Chapter 4 - Lab"
+author: "Saad M. Siddiqui"
+date: "3/8/2022"
+output: 
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ISLR2)        # For Smarket dataset
+library(MASS)         # For lda and qda models
+library(e1071)        # For naiveBayes model
+library(class)        # For KNN model
+
+library(dplyr)
+library(ggplot2)
+```
+
+# Example 01 - Stock Market Data - Logistic Regression
+## Initial Exploration
+```{r}
+# `Smarket` is a dataset of stock market returns on the S&P 500 index.
+# It has the percentage returns for each of the five previous trading days `Lag1` to `Lag5`
+# It also has `Volume` - the number of shares traded on the previous day 
+# The target is `Direction` - whether the market was `Up` or `Down` on the current date
+names(Smarket)
+dim(Smarket)      # 1250 rows, 9 columns
+summary(Smarket)
+```
+The `cor` function produces a matrix of pairwise correlations in the dataset. 
+```{r}
+round(cor(Smarket[, -9]), 3)    # All columns except for Target, since we need numeric cols
+```
+
+There is practically no correlation between today's returns and the percentage changes of the last 5 days or last 5 days' returns. The only real correlation is between the `Year` and `Volume`, which suggests volume of shares traded increases with year. 
+
+```{r}
+# Data is ordered chronologically
+head(Smarket)
+
+# There is an increase in volume with year
+ggplot(data = Smarket, aes(x = factor(Year), y = Volume)) + 
+  geom_boxplot() + 
+  labs(x = 'Year', y = 'Share Volume (Billions)', title = 'Smarket - Call Volume by Year')
+```
+
+## Logistic Regression - All Variables
+We will fit a logistic regression model to predict `Directon` using `Lag1` - `Lag5` and `Volume` as predictors. 
+
+We use `family = binomial` as an argument to the `glm` function to do so. 
+```{r}
+glm.fits.logreg <- glm(
+  Direction ~ Lag1 + Lag2 + Lag3 + Lag4 + Lag5 + Volume, 
+  data = Smarket, 
+  family = binomial
+)
+summary(glm.fits.logreg)
+```
+The smallest `p`- value associated with a predictor in this model is 0.145 with `Lag1`, but even this is well above the 0.05 threshold usually used for significance.
+So there is no clear evidence of association between any `Lag` predictor and the response. 
+
+Generally, the coefficients are telling us that if the percentage change was positive yesterday or the day before yesterday, then the market is likely to go `Down` today.
+
+We use the `coef` function to access the coefficients for this model, or subset using the object returned by `summary`.
+```{r}
+# What were the coefficients? 
+coef(glm.fits.logreg)
+
+# Another way of accessing same information
+summary(glm.fits.logreg)$coef
+```
+
+The `predict` function can be used to predict the probability of the response belonging to the positive class. With `type = 'response'` argument, `R` outputs probabilities of the form $P(Y = 1 | X)$ as opposed to the other information such as the logit.
+
+In this case, we know the positive class corresponds to the market going up because of the `contrasts` object which as been created. 
+```{r}
+glm.probs.logreg <- predict(glm.fits.logreg, type = 'response') 
+glm.probs.logreg[1:10]     # First 10 probabilities
+
+# How are the response variables encoded?
+contrasts(Smarket$Direction)
+```
+
+In order to binomialize the predicted probabilities, we need to compare them with a threshold value like 0.5 and conver them into a class label. 
+```{r}
+# Initialize a vector of predicted classes that is `Down` by default
+glm.pred.logreg <- rep('Down', length(glm.probs.logreg))   
+
+# Convert the elements where the probability is higher than a threshold to `Up`
+glm.pred.logreg[glm.probs.logreg > 0.5] <- 'Up'
+
+# Use the `table` function to check what proportion falls into each category
+table(glm.pred.logreg, Smarket$Direction) # Simlar to confusion matrix
+
+# Accuracy - What proportion of predictions were correct?
+# (TP + TN) / (TP + FP + TN + FN) 
+mean(glm.pred.logreg == Smarket$Direction)
+```
+
+### Logistic Regression - Train/Validation Split
+This is not a great model because the **training** error rate is $100% - 52.2% = 47.8%$. This is the error rate on data that has been used to train the model itself. This is to be expected since the $p$-values associated with the predictors offered no proof of statistically significant association between the predictors and the response. 
+
+A better way of assessing model performance is to compute metrics of interest on a **validation** or **held out** data set. 
+
+To do this, we will use 2001 - 2004's data for training and validate on 2005's data. 
+```{r}
+train.idx <- (Smarket$Year < 2005) 
+Smarket.2005 <- Smarket[!train.idx, ]
+dim(Smarket.2005)
+Direction.2005 <- Smarket$Direction[!train.idx]
+```
+
+We now fit a logistic regression model using only the training data and validate on the test data.
+
+```{r}
+# Train the model on Smarket data which is subsetted based on `train.idx`
+glm.fits.logreg <- glm(
+  Direction ~ Lag1 + Lag2 + Lag3 + Lag4 + Lag5 + Volume, 
+  data = Smarket, 
+  family = binomial, 
+  subset = train.idx
+)
+
+# Get probabilities for each data point in 2005 - this was not used for training
+glm.probs.logreg <- predict(glm.fits.logreg, Smarket.2005, type = 'response')
+
+# Make a vector to store class labels based on binomialized probabilities
+glm.pred.logreg <- rep('Down', 252) 
+glm.pred.logreg[glm.probs.logreg > 0.5] <- 'Up'
+table(glm.pred.logreg, Direction.2005)
+
+# Check accuracy and error rate 
+mean(glm.pred.logreg == Direction.2005) 
+mean(glm.pred.logreg != Direction.2005)
+```
+Test error rate is ~52%, which is worse than random guessing. This is not surprising considering that it is very difficult to predict the directon of movement of the stock market. 
+
+### Logistic Regression - Fewer Variables 
+We can try improving this model by removing all variables that had a low $p$-value in the original fit, as such variables deteriorate the fit by increasing variance without decreasing bias. 
+
+```{r}
+# Fit the model with fewer variables
+glm.fits.logreg.simple <- glm(Direction ~ Lag1 + Lag2, 
+                              data = Smarket, 
+                              family = binomial, 
+                              subset = train.idx)
+
+# Did the coefficients or p-values change?
+summary(glm.fits.logreg.simple)
+
+# Get predictions
+glm.probs.logreg.simple <- predict(
+  glm.fits.logreg.simple, Smarket.2005, type = 'response'
+) 
+glm.pred.logreg.simple <- rep('Down', nrow(Smarket.2005))
+glm.pred.logreg.simple[glm.probs.logreg.simple > 0.5] <- 'Up'
+
+# Make confusion matrix 
+table(glm.pred.logreg.simple, Direction.2005) 
+
+# Check accuracy and error rate 
+mean(glm.pred.logreg.simple == Direction.2005)
+mean(glm.pred.logreg.simple != Direction.2005)
+```
+The test error rate appears to be slightly better. However, in this case, simply predicting that the market will move up every day will also be correct ~56% of the time, so the new model is not really an improvement over an unintelligent baseline. 
+
+However, the confusion matrix shows that on days when the model predicts an increase in the market, it is correct ~58.2% of the time. This suggests a strategy where we trade on on days where model predicts an increasing market, and avoid trading n days where a decrease is predicted. 
+
+### Logistic Regression - Prediction with new Values 
+Suppose we want to predict the probability of an upwards or downwards movement of the market on arbitrary percentage changes.
+```{r}
+predict(
+  glm.fits.logreg.simple, 
+  data.frame(Lag1 = c(1.2, 1.5), Lag2 = c(1.1, -0.8)), 
+  type = 'response'
+)
+```
+
+# Example 02 - Stock Market Data - Linear Discriminant Analysis 
+## First Model
+Will now perform Linear Discriminant Analysis (LDA) n the `Smarket` data using the `lda` function from the `MASS` library.
+```{r}
+lda.fit <- lda(Direction ~ Lag1 + Lag2, data = Smarket, subset = train.idx)
+lda.fit
+```
+## Interpreting LDA Output
+The LDA object outputs
+- $\hat\pi_1 = 0.492$ = the prior probability of stock market moving down
+- $\hat\pi_2 = 0.508$ = the prior probability of stock market moving up
+
+This is because 49.2% of the training data had `Down` as the response, and 50.8% of the training data had `Up` as the response. 
+
+The `Group Means` are the averages or means of each predictor `Lag1` and `Lag2` within each class. This suggests that there is a tendency of the last 2 days' returns to be negative when the market moves up. 
+
+The coefficients are used to scale the `Lag` values. If $-0.642 \times$ `Lag1` $ - 0.514 \times$ `Lag2` is large, then the LDA classifier will predict a market increase, and if it is small then the LDA classfier will predict a market decline.
+
+## Visualizing LDA Output###
+```{r}
+# For each observation in the training set, the `plot` function generates a plot of linear discriminants i.e. sum(coeff * predictor)
+plot(lda.fit)
+```
+## Predicting with LDA 
+The `predict` function returns a list with three elements
+- `class` contains LDA's predictions abut the movement of the market 
+- `posterior` is a matrix where the $k^th$ columb contains the posterior probability that the corresponding observation belongs to the $k^th$ class. 
+- `x` contains the linear discriminants as described earlier.
+```{r}
+lda.pred <- predict(lda.fit, Smarket.2005)
+names(lda.pred)
+```
+
+LDA and Logistic Regression predictions are almost identical. 
+```{r}
+lda.class <- lda.pred$class 
+table(lda.class, Direction.2005) 
+mean(lda.class == Direction.2005)
+```
+Appling a 50% threshold to the posterior probabilities allows us to recreate the predictions contained in `lda.pred$class`. 
+```{r}
+sum(lda.pred$posterior[, 1] >= .5)
+sum(lda.pred$posterior[, 1] < .5)
+```
+
+The posterior probability outputs by the model correspond t othe probability that the market will **decrease** instead of **increase**, as was the case with logistic regression.
+```{r}
+lda.pred$posterior[1:10, 1]   # First 10 probabilities are mostly below 10
+lda.class[1:10]               # First 10 classes all correspond to `Up`
+```
+
+To use a posterior probability other than 50% for binomializing
+```{r}
+# If we wish to predict market will decrease with higher certainty 
+sum(lda.pred$posterior[, 1] > 0.9)
+```
+There were no days in 2005 where the predicted probability of decrease was above 90%. The greatest posterior probability was actually 52.5%.
+
+# Example 03 - Quadratic Discriminant Analysis
+## First Model
+We will now fit the QDA model to the `Smarket` data using the `qda` function, also part of the `MASS` library. 
+```{r}
+# Syntax is identical to `lda` 
+qda.fit <- qda(Direction ~ Lag1 + Lag2, data = Smarket, subset = train.idx) 
+qda.fit
+```
+## Initial Observations
+- Prior probabilities are the same as before because the dataset hasn't changed.
+- Group means are also the same as before.
+- The output does not contain the coefficients of discriminants, though.
+- This is because the QDA classifier uses a quadratic, rather than linear, discriminant function. 
+
+## Prediction
+```{r}
+qda.class <- predict(qda.fit, Smarket.2005)$class
+table(qda.class, Direction.2005) 
+mean(qda.class == Direction.2005)
+```
+
+## Analysis
+- QDA predictions have an accuracy of ~60% even though 2005 data was not used to fit the model. 
+- This suggests
+  - the underlying hypothesis function $f(X)$ is probably non-linear.
+  - the classes have different correlations between predictorss. 
+
+# Example 04 - Stock Market Data - Naive Bayes
+## First Model
+We will now fit a Naive Bayes classifier to the `Smarket` data through the `naiveBayes` function call which is part of the `e1071` library.
+
+By default, this implementation models each quantitative feature using a Gaussian distribution. We can, however, use the kernel density estimate variant as well.
+
+```{r}
+nb.fit <- naiveBayes(
+  Direction ~ Lag1 + Lag2, 
+  data = Smarket, 
+  subset = train.idx 
+)
+
+nb.fit
+```
+The output consists of
+- the prior probabilities of each class, which are just the proportions of records in training data belonging to each class. 
+- the matrix output for each variable shows the mean and standard deviation for each class. 
+- we can verify this manually.
+```{r}
+# Verify the mean of `Lag1` for cases where the marketdown 
+mean(Smarket$Lag1[train.idx][Smarket$Direction[train.idx] == 'Down'])
+
+# Verify the standard deviation of `Lag` for cases where market moves down
+sd(Smarket$Lag1[train.idx][Smarket$Direction[train.idx] == 'Down'])
+```
+
+## Predictions
+```{r}
+nb.class <- predict(nb.fit, Smarket.2005)
+table(nb.class, Direction.2005)
+mean(nb.class == Direction.2005)
+```
+
+Naive Bayes performs very well on this data with accuracy only slightly lower than QDA but much better than LDA. 
+
+We can also use the `predict` function to generate estimates of probability that each observation belongs to a particular class.
+```{r}
+nb.preds <- predict(nb.fit, Smarket.2005, type = 'raw') 
+nb.preds[1:5, ]
+```
+
+# Example 05 - Stock Market - K-Nearest Neighbors
+## First Model - $K = 1$S
+`class::knn` does not follow a fit -> predict process. Instead, it performs predictions with a single command.
+```{r}
+# Matrix of training predictors
+train.X <- cbind(Smarket$Lag1, Smarket$Lag2)[train.idx, ]   
+test.X <- cbind(Smarket$Lag1, Smarket$Lag2)[!train.idx, ]
+
+# Vector of targets
+train.Direction <- Smarket$Direction[train.idx]
+
+# Seed the random number generator to allow KNN for randomly choosing 
+# a subset of neighbors for tie-breaking in prediction. The seed will 
+# ensure results are reproducible.
+set.seed(1) 
+knn.pred <- knn(train.X, test.X, train.Direction, k = 1)  # Based on 1 nearest neigbhor
+table(knn.pred, Direction.2005)
+mean(knn.pred == Direction.2005)
+```
+Results with $K = 1$ are not very good because this leads to very high variance and potential for overfitting. Accuracy is only 50%. 
+
+### Second Model - $K = 3$
+Repeating the process with $K = 3$.
+```{r}
+knn.pred <- knn(train.X, test.X, train.Direction, k = 3)
+table(knn.pred, Direction.2005) 
+mean(knn.pred == Direction.2005)
+```
+
+No significant improvement. QDA is most likely the best model for this dataset. 
+
+# Example 06 - `Caravan` - KNN
+## Dataset Introduction 
+KNN didn't perform well on the `Smarket` data but it can perform well on other datasets where the relationship between the predictors and response is non-linear and where the predictors' distributions violate assumptions necessary for KNN, or where the ratio of the predictors to number of training examples is very large. 
+
+```{r}
+dim(Caravan)                    # 5822 examples, 86 predictors
+summary(Caravan$Purchase)       # Target is categorical 
+mean(Caravan$Purchase == 'Yes') # 5.98% purchased caravan insurance
+```
+
+## Feature Scaling
+KNN's fit can be influenced by the **scale** of the features used. For KNN, if salary is expressed in thousands of dollars but age is expressed in years, then a difference in salary between two data points will skew the distance between neighboring points, and thus the final classification. 
+
+The way to deal with this is to standardize or normalize the features with the `scale` function.
+
+```{r}
+standardized.X <- scale(Caravan[, -86])   # Exclude Purchase - the categorical target
+c(var(Caravan[, 1]), var(Caravan[, 2]))   # Variance of original features
+c(var(standardized.X[, 1]), var(standardized.X[, 2])) # Variance of scaled features
+```
+
+## Third Model - Standardized Features, Train-Test Split, $K = 1$
+Split the observations into train and test set, with test set consisting of the first 1,000 observations. 
+```{r}
+# First 1k observations are test, rest are train
+test <- 1:1000
+train.X <- standardized.X[-test, ]
+test.X <- standardized.X[test, ]
+train.Y <- Caravan$Purchase[-test]
+test.Y <- Caravan$Purchase[test]
+
+# Fit the model
+set.seed(1)
+knn.pred <- knn(train.X, test.X, train.Y, k = 1) 
+
+# Evaluate
+mean(test.Y == knn.pred)    # Overall accuracy 
+mean(test.Y != knn.pred)    # Overall error rate 
+mean(test.Y != 'No')        # Percentage of records where the label is not 'No'
+```
+Accuracy is good, and error rate is low. But of the labels, only 6% customers actually purchased insurance. This means we could get the error rate down to ~6% by **always** predicting `No` regardless of the predictors. 
+
+The fraction of individuals that are crrectly predicted to buy Caravan insurance might be a more relevant metric of interest. 
+```{r}
+table(knn.pred, test.Y)
+```
+
+## Third Model - Standardized Features, Train-Test Split, $K = 3$
+```{r}
+knn.pred <- knn(train.X, test.X, train.Y, k = 3)
+table(knn.pred, test.Y)
+```
+With $K = 3$, the success rate on customers who actually purchase insurance is 19.2%. 
+
+## Third Model - Standardized Features, Train-Test Split, $K = 5$
+```{r}
+knn.pred <- knn(train.X, test.X, train.Y, k = 5)
+table(knn.pred, test.Y)
+```
+
+With $K = 5$, the success rate on customers who actually purchase insurance increases to 26.7%.
+
+## Fourth Model - Logistic Regression with Custom Threshold 
+If we predict a purchase when the predicted probability exceeds 0.25 instead of 0.50 using a logistic regression model, we can get a better classifier. 
+```{r}
+glm.fits.caravan.logreg <- glm(
+  Purchase ~ ., 
+  data = Caravan,
+  family = binomial, 
+  subset = -test
+)
+
+glm.probs.caravan.logreg <- predict(
+  glm.fits.caravan.logreg, Caravan[test, ], type = 'response'
+)
+
+# Examine error rate with 0.5 as the binomializing threshold
+glm.pred.caravan.logreg <- rep("No", 1000)
+glm.pred.caravan.logreg[glm.probs.caravan.logreg > 0.5] <- "Yes"
+table(glm.pred.caravan.logreg, test.Y) 
+
+# Examine error rate with 0.25 as the binomializing threshold
+glm.pred.caravan.logreg <- rep("No", 1000)
+glm.pred.caravan.logreg[glm.probs.caravan.logreg > 0.25] <- "Yes"
+table(glm.pred.caravan.logreg, test.Y) 
+```
+
+In the first case with threshold = 0.5, the classifier predicts 7 insurance purchases and all of them are wrong.
+
+In the second case with threshold = 0.25, the classifier predicts 33 insurance purchases of which 11% are correct. 
+
+So using a different classification threshold can often be useful. 
+
+# Example 07 - `Bikeshare` - Poisson Regression
+In this example, we will use Poisson Regression to predict the number of bike rentals per hour in Washington, DC using the `Bikeshare` dataset.
+```{r}
+head(Bikeshare)
+dim(Bikeshare)
+names(Bikeshare)
+```
+
+## Model 01 - Least Squares Linear Regression
+### Coding Scheme 01
+```{r}
+mod.bike.lm <- lm(
+  bikers ~ mnth + hr + workingday + temp + weathersit, 
+  data = Bikeshare
+)
+
+summary(mod.bike.lm)
+```
+In this coding, the first level of `hr` and `mnth` are not provided explicit coefficients. Instead they are assumed as part of the baseline, and all other coefficients are measured relative to this baseline. 
+
+`mnthFeb` coefficient being 6.845 signifies that holding all other variables constant, there are, on average, about 7 additional riders in Feburary **relative to  January**. 
+
+### Coding Scheme 02
+We now create a different model that uses a different coding for the categorical variables.
+```{r}
+contrasts(Bikeshare$hr) <- contr.sum(24) 
+contrasts(Bikeshare$mnth) <- contr.sum(12)
+
+mod.bike.lm.contrasts <- lm(
+  bikers ~ mnth + hr + workingday + temp + weathersit, 
+  data = Bikeshare 
+)
+summary(mod.bike.lm.contrasts)
+```
+The difference between these codings is that in `mod.bike.lm.contrasts` results in a coefficient being reported for all levels of `hr` and `mnth`. 
+
+The coefficients for the last level of `mnth` and `hr` are not zero, rather they're equal to $-1 \times$ `sum`(coefficient estimates of other levels). 
+
+This, in turn, means coefficients of `hr` and `math` in `mod.bike.lm.contrasts` will always sum to 0, and the coefficient of `mnth1` being -46.0871 means there are 46 fewer rides in January relative to the **yearly average**.
+
+### Predictions are Coding Agnostc 
+The predictions from the two models will be the same, regardless of the coding scheme used. Coding scheme only affects interpretation of coefficients, not predictions. 
+```{r}
+# Sum of squared error between the predictions from both models 
+sum((predict(mod.bike.lm) - predict(mod.bike.lm.contrasts))^2)
+
+# Another way to test this 
+all.equal(predict(mod.bike.lm), predict(mod.bike.lm.contrasts))
+```
+
+### Generating Coefficient Plots
+For categorical variables like `mnth` and `hr` which have a lot of levels, we can plot the coefficients rather than read them in a table. 
+```{r}
+# Because coefficients in this coding scheme used a sum transformation
+coef.months <- c(coef(mod.bike.lm.contrasts))[2:12]
+coef.months <- c(coef.months, -1 * sum(coef.months))
+plot(
+  coef.months, xlab = 'Month', ylab = 'Coefficient', xaxt = 'n', col = 'blue', 
+  pch = 19, type = 'o', 
+  main = 'Bikeshare - Linear Regression Coefficients - Coding Scheme 02'
+)
+axis(side = 1, at = 1:12, labels = c('J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'))
+```
+
+We can do the same for `hr`
+```{r}
+coef.hours <- c(coef(mod.bike.lm.contrasts))[13:35]
+coef.hours <- c(coef.hours, - 1 * sum(coef.hours))
+plot(coef.hours, xlab = 'Hour', ylabel = 'Coefficient', col = 'blue', pch = 19, 
+     type = 'o', main = 'Bikeshare - Linear Regression Coefficients - Coding Scheme 02')
+```
+
+## Model 02 - Poisson Regression 
+### Fitting Model
+Instead of fitting a linear regressor, we use a Poisson regressor.
+```{r}
+mod.bike.pois <- glm(
+  bikers ~ mnth + hr + workingday + temp + weathersit, 
+  data = Bikeshare, 
+  family  = poisson
+)
+
+summary(mod.bike.pois)
+```
+
+### Generating plots of coefficients 
+```{r}
+# In this coding, we concatenate the coefficients and their negative sum
+coef.month.pois <- coef(mod.bike.pois)[2:12] 
+coef.month.pois <- c(coef.month.pois, -1 * sum(coef.month.pois))
+
+# Month Coefficients
+plot(coef.month.pois, xlab = 'Month', ylab = 'Coefficient', xaxt = 'n', col = 'blue', pch = 19, type = 'o', main = 'Bikeshare - Poisson Regression - Coefficients') 
+axis(side = 1, at = 1:12, labels = c('J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'))
+
+# Hour Coefficients
+coef.hours.pois <- coef(mod.bike.pois)[13:35]
+coef.hours.pois <- c(coef.hours.pois, -1 * sum(coef.hours.pois))
+plot(coef.hours.pois, xlab = 'Hour', ylab = 'Coefficient', col = 'blue', pch = 19, type = 'o')
+```
+
+### Predictions 
+We have to use `type = 'response'` to specify `R` to output 
+$$exp(\hat\beta_0 + \hat\beta_1X_1 + ... \hat\beta_pX_p)$$ 
+instead of just
+$$\hat\beta_0 + \hat\beta_1X_1 + ... \hat\beta_pX_p$$
+```{r}
+plot(
+  predict(mod.bike.lm.contrasts), 
+  predict(mod.bike.pois, type = 'response'), 
+  xlab = 'Predictions - Linear Regression', 
+  ylab = 'Predictions - Poisson Regression', 
+  main = 'Bikeshare - Poisson vs Linear Predictions'
+)
+abline(0, 1, col = 2, lwd = 3)
+```
+
+### Observations
+- Predictions from both models are correlated.
+- Poisson regression predictions are **always** non-negative.
+- Linear regression predictions can still be negative.
+- At very high or low levels of ridership, poisson regression predictions tend to be larger than linear regression.

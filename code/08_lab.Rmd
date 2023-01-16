@@ -1,0 +1,346 @@
+---
+title: "ISLR - Chapter 08 - Lab"
+author: "Saad M. Siddiqui"
+date: "4/9/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ISLR2)
+library(tree)               # Used to construct classification and regression trees
+library(ggplot2)
+library(randomForest)       # For random forests and bagging
+library(gbm)                # For gradient boosting
+library(BART)               # For Bayesian Additive Regression Trees
+```
+
+# Example 01 - `Carseats` Classifciation 
+## Fitting Tree
+We first use classification trees to analayze `Carseats` data. In this data, `Sales` is a continuous variable which we binomialize or binarize by comparing to threshold of `8` and make a new column in the original `Carseats` data.frame.
+```{r}
+Carseats[['High']] <- factor(ifelse(Carseats$Sales <= 8, "No", "Yes"))
+```
+
+We now use the `tree` function to fit a classification tree in order to predict `High` using all variables but Sales. 
+
+```{r}
+tree.carseats.01 <- tree(High ~ . - Sales, data = Carseats)
+summary(tree.carseats.01)
+```
+
+Training error rate is 9%, and there are 27 nodes within the tree. Not all variables are actually used in tree construction, which means there is some pruning/selective splitting. 
+
+For classification, the `deviance` reported in `summary` is given by 
+$$
+-2\sum_m\sum_kn_{mk}log{\hat{p}_{mk}}
+$$
+
+
+Where $n_{mk}$ is the number of observations of the $k^{th}$ class in the $m^{th}$ terminal node. $\hat{p_{mk}}$ is the proportion of observations belonging to $k^{th}$ class in the $m^{th}$ node. So for calculating deviance we are summing the proportion of each class times the number of observations of each class for all classes across all terminal nodes in the tree.
+
+A small deviance indicates a good fit because if each node ideally only has observations from one class then $\hat{p_{mk}}$ becomes 1 and the deviance for that node just becomes the number of observations for that class. With multiple classes, this sum will increase.
+
+The **residual mean deviance** reported is just the total deviance divided by $n - abs(T_0)$ i.e. the absolute value of the terminal nodes. In this case, this is $400 - 27 = 373$, which is also shown in the summary output. 
+
+## Visualization
+We can also visualize this tree for interpretation.
+```{r}
+# plot is used to display the tree structure 
+plot(tree.carseats.01)
+
+# text is usd to display the node labels. pretty = 0 -> include category names for 
+# qualitative predictors rather than short codes like a, b, c
+text(tree.carseats.01, pretty = 0)
+```
+
+The most important feature is the `ShelveLoc`, as it appears at the top of tree. This then seems to be followed by `Price` and `Income`.
+
+Can also examine the tree structure in R directly as console output. Terminal nodes are marked with asterisks *.
+```{r}
+tree.carseats.01
+```
+
+## Evaluation - Validation Set
+To evaluate the classification tree, need to check performance on outsample data. To do so, we use the validation set approach below. 
+```{r}
+# Train test split
+set.seed(2)
+train.carseats.idx <- sample(1:nrow(Carseats), 200)     # 200 training obs 
+test.carseats.idx <- (-train.carseats.idx)
+
+# Fit tree using training data
+tree.carseats.02 <- tree(High ~ . - Sales, Carseats, subset = train.carseats.idx)
+
+# Generate predictions on outsample data
+pred.carseats.02 <- predict(tree.carseats.02, Carseats[test.carseats.idx, ], type = 'class')
+
+# What is the test set accuracy
+table(pred.carseats.02, Carseats[test.carseats.idx, ]$High)
+
+# Accuracy is TP + TN / (TP + TN + FP + FN) * 100 
+(104 + 50) / (104 + 50 + 33 + 13)
+```
+
+The outsample accuracy of this classification tree is 77%.
+
+## Pruning and Tuning - Cross-Validation
+We now use cross-validation to establish if pruning the tree might lead to improved results with the `cv.tree` function. Specifically, the function uses cost complexity pruning to select a sequence of trees for consideration. We can specify that we want classification error rate (as opposed to Gini impurity or deviance) to guide the pruning with `FUN = prune.misclass`. 
+
+```{r}
+# For consistent tree construction across runs
+set.seed(7)
+
+# Use misclassification rate as loss function to guide pruning
+cv.carseats.01 <- cv.tree(tree.carseats.02, FUN = prune.misclass)
+
+# Which objects are stored in the `cv.carseats` object?
+names(cv.carseats.01)
+
+# Examine each of them in turn
+# size is the number of nodes in each version of the tree 
+# dev is number of cross-validation errors, NOT the deviance
+# k is the cost complexity coefficient, equivalent to alpha
+data.frame(
+  size = cv.carseats.01$size, 
+  dev = cv.carseats.01$dev, 
+  k = cv.carseats.01$k
+)
+
+# method is the function used for pruning 
+cv.carseats.01$method
+```
+
+The tree with 9 terminal nodes has 74 misclassified observations across all cross-validations and uses a pruning coefficient of 1.4
+
+```{r}
+par(mfrow = c(2, 1)) 
+plot(cv.carseats.01$size, cv.carseats.01$dev, type = 'b', main = 'Cross-Val Misclassifications against Size')
+plot(cv.carseats.01$k, cv.carseats.01$dev, type = 'b', main = 'Cross-Val Misclassifications against Cost Complexity Coefficiemts')
+```
+
+We now apply the `prune.misclass` function in order to prune the tree to obtain the nine-node tree, because it is the first tree with the lowest X-val error.
+```{r}
+tree.carseats.pruned.02 <- prune.misclass(tree.carseats.02, best = 9)
+plot(tree.carseats.pruned.02)
+text(tree.carseats.pruned.02, pretty = 0)
+```
+Validate on the test data.
+```{r}
+pred.carseats.pruned.02 <- predict(tree.carseats.pruned.02, Carseats[test.carseats.idx, ], type = 'class')
+table(pred.carseats.pruned.02, Carseats[test.carseats.idx, ]$High)
+mean(pred.carseats.pruned.02 == Carseats[test.carseats.idx, ]$High)
+```
+
+We now have an outsample accuracy of 0.5. Increasing the value of `best` can lead to a tree with more nodes. However, it does not lead to better accuracy.
+```{r}
+tree.carseats.pruned.03 <- prune.misclass(tree.carseats.02, best = 14)
+plot(tree.carseats.pruned.03) 
+text(tree.carseats.pruned.03, pretty = 0)
+
+pred.carseats.pruned.03 <- predict(tree.carseats.pruned.03, Carseats[test.carseats.idx, ], type = 'class')
+table(pred.carseats.pruned.03, Carseats[test.carseats.idx, ]$High)
+mean(pred.carseats.pruned.03 == Carseats[test.carseats.idx, ]$High)
+```
+
+# Example 02 - Fitting Regression Trees
+## First Tree
+Here, we fit a regression tree to the `Boston` data set to predict the `medv` as a function of other predictors. First, we create a train and test set.
+```{r}
+# Similar syntax as before
+set.seed(1)
+boston.train.idx <- sample(1:nrow(Boston), nrow(Boston) / 2) 
+tree.boston.01 <- tree(medv ~ ., Boston, subset = boston.train.idx)
+summary(tree.boston.01)
+
+# Plotting worsk similarly as well 
+plot(tree.boston.01)
+text(tree.boston.01, pretty = 0)
+```
+
+In the context of a regression tree, the deviance is just the residual sum of squares. Mean deviance is MSE. 
+
+The number of rooms `rm` seems to be the most important feature, followed by `lstat` i.e. the percentage of individuals with lower socioeconomic status. This tree indicates that for larger values of `rm` or lower values of `lstat`, the `medv` is. higher
+
+We could have fit a much bigger tree by passing `control = tree.control(nobs = length(boston.train.idx), mindev = 0)` into the tree function. 
+
+## Cross-Validation and Pruning
+Use cross-valdiation to see if pruning has a beneficial effect.
+```{r}
+cv.boston.01 <- cv.tree(tree.boston.01)
+plot(cv.boston.01$size, cv.boston.01$dev, type = 'b', xlab = 'Tree Size', ylab = 'RSS')
+```
+
+Cross validation suggests that a tree with 7 nodes has the lowest cross-validated RSS, which means pruning the tree might not useful. However, if we wanted to, we could prune the tree with the `best` command to get 5 terminal nodes.
+```{r}
+prune.boston.01 <- prune.tree(tree.boston.01, best = 5)
+plot(prune.boston.01)
+text(prune.boston.01, pretty = 0)
+```
+
+## Evaluating on Test Set 
+```{r}
+pred.boston.01 <- predict(tree.boston.01, newdata = Boston[-boston.train.idx, ])
+plot(pred.boston.01, Boston[-boston.train.idx, ]$medv, 
+     xlab = 'Predicted', 
+     ylab = 'Actual',
+     main = 'Predicted vs Actual `medv` for Boston`')
+abline(0, 1)
+mean((pred.boston.01 - Boston[-boston.train.idx, ]$medv)^2)
+sqrt(mean((pred.boston.01 - Boston[-boston.train.idx, ]$medv)^2))
+```
+
+This plot is interesting because it shows that the prediction will always be the mean target of one of the 7 nodes within the tree, whereas the actual target can take a range of different values.
+
+The RMSE is 5.94 which means that on average, our predictions will be within $5941of the true median home value for the census tract.
+
+# Example 03 - Bagging and Random Forests
+## Bagging
+Here, we apply bagging and random forest to the `Boston` data set. Random Forests can be created with the `randomForest` or `ranger` packages.
+
+Bagging = bootstrap aggregating = taking $B$ bootstrapped subsets of the trainiing set, training a different decision tree on each subset, and averaging predictions of $B$ trees that are most likely correlated. In other words, bagging is a special case of `randomForest` with $m = p$, with $p$ being the total number of predictors available and $m$ being the number of predictors used to make a split at each node.
+
+This means we can use `randomForest` to implement both methods.
+
+```{r}
+set.seed(1)
+bag.boston.01 <- randomForest(
+  medv ~ ., data = Boston, subset = boston.train.idx, mtry = 12, importance = TRUE
+)
+bag.boston.01
+
+# How well does this perform on the test set? 
+pred.bag.boston.01 <- predict(bag.boston.01, newdata = Boston[-boston.train.idx,])
+plot(pred.bag.boston.01, Boston[-boston.train.idx]$medv)
+abline(0, 1)
+mean((pred.bag.boston.01 - Boston[-boston.train.idx, ]$medv)^2)
+sqrt(mean((pred.bag.boston.01 - Boston[-boston.train.idx, ]$medv)^2))
+```
+
+`mtry = 12` indicates that all 12 predictors should be considered for the split.
+Proportion of training variance explained looks quite good. 
+
+The RSS and MSE are also lower than that of the single, optimally pruned decision tree, demonstrating the benefit of ensembling. 
+
+## Random Forest
+Growing a random forest is very similar, except this time we use fewer predictors. By default, when fitting a regression forest, `randomForest` uses `mtry` = `$\frac{p}/{3}$ whereas classification forests use $\sqrt{p}$. 
+
+Here, we explicitly use `mtry = 6`.
+
+```{r}
+set.seed(1)
+rf.boston.01 <- randomForest(medv ~ ., data = Boston, subset = boston.train.idx, 
+                             mtry = 6, importance = TRUE) 
+pred.rf.boston.01 <- predict(rf.boston.01, newdata = Boston[-boston.train.idx, ])
+mse.rf.boston.01 <- mean((pred.rf.boston.01 - Boston[-boston.train.idx, ]$medv)^2)
+rmse.rf.boston.01 <- sqrt(mse.rf.boston.01)
+
+mse.rf.boston.01
+rmse.rf.boston.01
+```
+MSE and RMSE on the test set are both lower for the random forest compared to bagging. This importance is due to random forest's ability to decorrelate predictions and decrease variance.
+
+## Importance
+We can use the `importance` function on `randomForest` objects to get relative feature importances.
+```{r}
+importance(rf.boston.01)
+```
+
+Two measures of importance are reported
+- mean decrease of accuracy in predictions on out of bag samples when the variable is permuted
+- total decrease in node impurity that results from splits over that variable, averaged over all trees. 
+
+In the case of regression trees, impurity is measured by training RSS and for classification trees, it is measured by deviance. 
+
+We can visualize this information with `varImpPlot`. 
+```{r}
+varImpPlot(rf.boston.01)
+```
+
+These results indicate that `rm` - the number of rooms - and `lstat` - percentage of lower socioeconomic population, are by far the strongest predictors. 
+
+## Boosting 
+We use the the `gbm` package to fit boosted regression trees to the `Boston` data set. Recall that boosting means we'll grow an ensemble of underfit/simple predictors and each predictor will be fit to the residuals of the previous predictor. At the end, we'll average predictions from all predictors, where each predictor will have learnt slowly by fitting to the data incrementally. 
+
+For regression trees, need to specify `distribution = 'gaussian'`. For binary classification problems, need to specify `distribution = 'bernoulli'`. The argument `n.trees = 5000` specifies that we want to fit an ensemble containing 5000 decision trees. `interaction.depth = 4` limits the depth of each tree.
+```{r}
+set.seed(1)
+boost.boston <- gbm(medv ~., data = Boston[boston.train.idx, ], 
+                    distribution = 'gaussian', n.trees = 5000, 
+                    interaction.depth = 4)
+summary(boost.boston)
+```
+
+The `summary` function prints a relative feature importance plot and table of the same information.
+
+We can again see `lstat` and `rm` as important predictors - consistent with feature impotance analyses from other statistical learning methods. 
+
+We can also produce **partial dependence plots** for these two variables to illustrate the marginal effect of the selected variables on the response after integrating out the other variables. 
+```{r}
+plot(boost.boston, i = 'rm')
+plot(boost.boston, i = 'lstat')
+```
+This plot shows that as the `rm` increases, the `medv` value increases assuming all ther predictors are constant. Likewise, the second plot shows that as the `lstat` percentage increases, the `medv` decreases, assuming all other predictors constant. 
+
+We can now use the boosted model to predict `medv` on the test set.
+```{r}
+pred.boost.boston <- predict(boost.boston, newdata = Boston[-boston.train.idx, ], 
+                             n.tree = 5000)
+mean((pred.boost.boston - Boston[-boston.train.idx, ]$medv)^2)
+sqrt(mean((pred.boost.boston - Boston[-boston.train.idx, ]$medv)^2))
+```
+
+Gradient boosting gives the lowest test-set MSE and RMSE of all other tree-based methods we have considered so far. 
+
+## Specifying Learning Rate $\lambda$
+We can ift the GBM with a pre-specified learning rate as well. Default value is 0.001.
+```{r}
+set.seed(1)
+boost.boston.01 <- gbm(medv ~ ., data = Boston[boston.train.idx, ], 
+                       distribution = 'gaussian', n.trees = 5000,
+                       interaction.depth = 4, shrinkage = 0.2, verbose = F)
+pred.boston.boost.01 <- predict(
+  boost.boston.01, 
+  newdata = Boston[-boston.train.idx, ], 
+  n.trees = 5000
+)
+
+mean((pred.boston.boost.01 - Boston[-boston.train.idx,]$medv)^2)
+sqrt(mean((pred.boston.boost.01 - Boston[-boston.train.idx,]$medv)^2))
+```
+
+In this case, using $\lambda = 0.2$ leads to a higher MSE.
+
+# Example 03 - Bayesian Additive Regression Trees
+Here, we use the `BART` package's `gbart` function to fit a Bayesian additive regression tree to the `Boston` housing data. `gbart` s designed for quantitative outcome variables. For binary outcomes, `lbart` and `pbart` are available. 
+
+First, create a matrix of predictors and responses for training and test data.
+```{r}
+# Extract features and response
+x <- Boston[, 1:12]
+y <- Boston[, "medv"]
+
+# Split into training and test sets
+x.train <- x[boston.train.idx, ]
+y.train <- y[boston.train.idx]
+x.test <- x[-boston.train.idx, ]
+y.test <- y[-boston.train.idx]
+
+# Fit a BART. Note how only the test set predictors are passed as argument
+set.seed(1)
+bart.boston.01 <- gbart(x.train, y.train, x.test = x.test)
+
+# Compute test error 
+pred.bart.boston.01 <- bart.boston.01$yhat.test.mean
+mean((y.test - pred.bart.boston.01)^2)
+```
+
+In this case, the BART test error is lower than random forests as well as boosting.
+
+We can now check how many times each variable appeared in the collection of trees.
+```{r}
+boston.bart.ord <- order(bart.boston.01$varcount.mean, decreasing = T)
+bart.boston.01$varcount.mean[boston.bart.ord]
+```
+
+This is interesting because `nox` and `lstat` are the top features - or most frequently occuring features - as opposed to `lstat` and `rm`.

@@ -1,0 +1,670 @@
+---
+title: "ISLR - Chapter 05 - Exercises"
+author: "Saad M. Siddiqui"
+date: "3/13/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(ISLR2)        # For datasets
+library(dplyr)        # For data wrangling
+library(ggplot2)      # For visualizations
+library(boot)         # For bootstrapping functions
+```
+
+# Conceptual Exercises 
+# Exercise 01 - Proof: Minimizing Variance
+**Using basic statistical properties of variance as well as single variable calculus, prove that the value of $\alpha$ that minimized $Var(\alphaX + (1 - \alpha)Y) is given by**
+$$
+\alpha = \frac{\sigma_Y^2 - \sigma_{X,Y}}{\sigma_X^2 + \sigma_X^2 - 2\sigma_{X,Y}}
+$$
+
+We know that 
+$$
+Var(aX + bY) = a^2Var(X) + b^2Var(Y) + 2abCov(X,Y)
+$$
+This means 
+$$Var(\alpha X) + (1 - \alpha)Y$$
+$$= \alpha^2Var(X) + (1 - \alpha)^2Var(Y) + 2(\alpha)(1 - \alpha)Cov(X, Y)$$
+
+$$= \alpha^2Var(X) + (1 - 2\alpha + \alpha^2)Var(Y) + 2(\alpha - \alpha^2)Cov(X, Y)$$
+The value of $\alpha$ that minimises this expression will be given equating its second derivative to 0 and sovling for $\alpha$.
+$$
+f(\alpha) = \alpha^2Var(X) + (1 - 2\alpha + \alpha^2)Var(Y) + 2(\alpha - \alpha^2)Cov(X, Y)
+$$
+$$
+f'(\alpha) = 2\alpha Var(X) + (-2 + 2\alpha)Var(Y) + 2(1 - 2\alpha)Cov(X, Y)
+$$
+For the inflection point, equate expression with 0 and solve for $\alpha$.
+$$f'(\alpha) = 2\alpha Var(X) + (2\alpha - 2)Var(Y) + (2 - 4\alpha)Cov(X, Y) = 0$$
+Expanding expressions
+$$2\alpha Var(X) + 2\alpha Var(Y) - 2Var(Y) + 2Cov(X, Y) - 4\alpha Cov(X,Y) = 0$$
+Collecting like terms
+$$2\alpha Var(X) + 2\alpha Var(Y) - 4\alpha Cov(X,Y) = 2Var(Y) + 2Cov(X, Y)$$
+$$2\alpha(Var(X) + Var(Y) - 2Cov(X, Y)) = 2Var(Y) + 2Cov(X,Y)$$
+Making $\alpha the subject
+$$2\alpha = \frac{2(Var(Y) + Cov(X,Y))}{Var(X) + Var(Y) - 2Cov(X, Y)}$$
+Removing common scaling factor
+$$\alpha = \frac{Var(Y) + Cov(X,Y)}{Var(X) + Var(Y) - 2Cov(X, Y)}$$
+# Exercise 02 - Bootstrapping
+**We will now derive the probability that a given observation is part of a bootsrap sample. Suppose that we obtain a bootstrap sample from a set of $n$ observations.**
+
+## Part (a) 
+**What is the probability that the first bootstrap observation is *not* the $j$th observation from the original sample? Justify your answer.**
+- Assume all observations are equally likely to be drawn in bootstrap sample.
+- This means the probability of drawing any particular sample is $\frac{1}{n}$
+- The probability of drawing sample $j$ such that it is not the first sample is essentially the same as $\sum\limits_i^NPr(x_i) - Pr(x_1) = 1 - \frac{1}{n}$ = $1 - \frac{1}{n}$.
+
+
+## Part (b)
+**What is the the probability that the second boostrap observation is *not* the $j$th observation from the original sample?**
+- Bootstrapping means that samples are drawn with replacement. 
+- This means the probability that the $j$th sample and 2nd sample are not identical is the same as the probability that the $j$th sample asnd 1st sample are not identical.
+- This means the probability is $1 - \frac{1}{n}$
+
+
+## Part (c) 
+**Argue that the probability that the $j$th observation is *not* in the bootsrap sample is $(1 - frac{1}{n})^n$?**
+- If we assume that the draws in a boostrapped sample are independent of each other, then the probabilties of individual draws not being the $j$th sample can essentially be multiplied for all $j$. 
+- Mathematically, 
+$$
+P(s_i \neq j) = 1 - \frac{1}{n} \ \forall i \in \{1, 2, 3, ..., n\}
+$$
+- And we want the product of these probabilities 
+$$
+\prod \limits_{i = 1}^{n}(1 - \frac{1}{n}) = (1 - \frac{1}{n})^n
+$$
+
+## Part (d) 
+**When $n = 5$ what is the probability that the $j$th observation *is* in the bootstrap sample?**
+```{r}
+n <- 5
+p_not_in_set <- (1 - 1/n)^n    # Probability that not in sample
+p_in_set = 1 - p_not_in_set
+print(p_in_set)
+```
+
+## Part (e) 
+**When $n = 100$ what is the probability that the $j$th observation is in the bootstrap sample?**
+```{r}
+n <- 100
+p_not_in_set <- (1 - 1/n)^n    # Probability that not in sample
+p_in_set = 1 - p_not_in_set
+print(p_in_set)
+```
+
+## Part (f) 
+**When $n = 10,000$ what is the probability that the $j$th observation is the bootstrap sample?**
+```{r}
+n <- 10000
+p_not_in_set <- (1 - 1/n)^n    # Probability that not in sample
+p_in_set = 1 - p_not_in_set
+print(p_in_set)
+```
+
+## Part (g) 
+**Create a plot that displays, for each integer value of $n$ from 1 to 100,000, the probability that the $j$th observation is in the bootstrap sample. Comment on what you observe.**
+```{r}
+n <- 1:100000
+p_n <- sapply(n, function(x) { 1 - (1 - 1/x)^x})
+
+p.df <- data.frame(n, obs_in_bootstrap_sample = p_n)
+p.df %>%
+  ggplot(aes(x = n, y = obs_in_bootstrap_sample)) + 
+  geom_line() +
+  labs(x = 'n', y = 'P(observation in bootstrap sample',
+       title = 'Bootstrapping - Probability of Repeated Sample')
+```
+
+It seems the probability is 0.63 for almost all values of $n$. Looking at a narrower range of $n$.
+
+```{r}
+p.df %>%
+  dplyr::filter(n <= 100) %>% 
+  ggplot(aes(x = n, y = obs_in_bootstrap_sample)) + 
+  geom_line() +
+  labs(x = 'n', y = 'P(observation in bootstrap sample',
+       title = 'Bootstrapping - Probability of Repeated Sample')
+```
+
+As the number of bootstrap samples increases, the probability that an observation $j$ will reappear at a later sample approaches its minimum value of 0.67. This means when bootstrapping, it doesn't make sense to increase bootstrap iterations beyond 10 if the intention is to minimise the probability of repeated sampling. However, this could still be useful for minimising standard error estimates.
+
+## Part (h) 
+**We will now investigate numerically the probability that a bootstrap sample of size $n = 100$ contains the $j$th observation. Here, $j = 4$. We repeatedly create bootstrap samples, and each time we record whether or not the fourth observation is contained in the bootstrap sample.**
+```{r}
+store <- rep(NA, 10000)
+
+for(i in 1:10000) {
+  store[i] <- sum(sample(1:100, rep = TRUE) == 4) > 0
+}
+
+mean(store)
+```
+
+**Comments on the results obtained.**
+
+- We are sampling 10,000 random integers from 1 to 100 with replacement and checking the proportion of records where the sampled integer is 4.
+- Based on theoretical analyses earlier, we expect this percentage to be $\approx$ 63%.
+- The numerical results seem to support this analysis.
+
+# Exercise 03 - $k$-Fold Cross Validation
+**We now reveiw $k$-fold cross-validation**. 
+## Part (a)
+**Explain how $k$-fold cross-validation is implemented.**
+
+- We have a data set of $n$ observations.
+- The dataset is divided into $k$ folds, where each fold has $n / k$ samples.
+- $(n - 1)$ folds are used to train a statistical learning model. 
+- The remaining fold is used to validate the model.
+- In this way, $k$ different instances of the model are trained and validated on out-of-sample data on some measure of performance such as MAE, MSE, accuracy, precision, etc.
+- The average of the performance measure across all folds gives a relatively reliable estimate of the "true" performance of the model.
+- Generally, $k$ is either 5 or 10.
+
+## Part (b) 
+**What are the advantages and disadvantages of $k$-fold cross validation relative to?
+1. The validation set approach
+2. LOOCV**
+
+- Compared to the validation set approach
+  - $k$-fold validation has lower variance. The validation set approach's measures of error or performance have higher variability since they are more likely to change with the subset of the data set used for validation. 
+  - $k$-fold validation uses $(k - 1)/n$ proportion of the training data to learn parameters. In validation set approach, only half of the training set is used.
+  - The validation set approach can over-estimate the test set error. 
+  - $k$-fold validation is conceptually more difficult to understand and implement.
+  - $k$-fold validation is computationally more expensive.
+  
+- Compared to the LOOCV approach
+  - $k$-fold validation is computationally less intensive, as $k$ models have to be trained instead of $n$ models, and $k << n$. The exception is cases like linear regression, where leverage can be used to compute error more efficiently through LOOCV. 
+  - $k$-fold validation can have slightly higher bias but lower variance than LOOCV.
+  - $k$-fold validation estimates of test set error are still stochastic: which data lies in the validation fold depends on random chance. LOOCV does not have any randomness in evaluation because every single data point is used as a test set example.
+  
+# Exercise 04 - Estimating Standard Deviation
+**Suppose we use some statistical learning method to make a prediction for the response $Y$ for a particular value of the predictor $X$. Carefully describe how we might estimate the standard deviation of our prediction.**
+- Boostrapping can be used to derive an estimate of the standard error for this prediction.
+- From the original training set of $n$ examples, sample $n_B$ examples with replacement $B$ times to make $B$ different training sets.
+- Train $B$ instances of the supervised learning method, one on each of the $B$ subsets of the resampled data.
+- Make predictions with each of these $B$ instances on the new training instance $X$. 
+- Calculate the standard deviation of the predictions from the previous step.
+
+# Applied Exercies
+# Exercise 05 - Logistic Regression with Validation Sets
+**In chapter 4, we used logistic regression to predict the probability of `default` using `income` and `balance` on the `Default` datset. We will now estimate the test error of this logistic regression model using the validation set approach.**
+
+## Part (a)
+**Fit a logistic regression model that uses `income` and `balance` to predict `default`.**
+```{r}
+glm.fit.logreg <- glm(default ~ income + balance, data = Default, family = binomial)
+summary(glm.fit.logreg)
+```
+
+## Part (b) 
+**Using the validation set approach, estimate the test error of this model. In order to do this, you must
+1. Split the sample set into a training and validation set.
+2. Fit a multiple logistic regression model using only the training observations.
+3. Obtan a prediction of default status for each individual in the validation set by computing the posterior probability of default for that individual, and classifying the individual to the `default` category if the posterior probability is greater than 0.5.
+4. Compute the validation set error, which is the fraction of the observations in the validation set that are misclassified.**
+```{r}
+# Split the sample set into a training and validation set 
+
+# Seeding random number generator and using 80-20 split
+set.seed(1)
+train.idx <- sample(x = 1:nrow(Default), size = 0.8 * nrow(Default))
+
+# Fit a multiple logistic regression model using only the training observations.
+glm.fit.default <- glm(
+  default ~ income + balance, 
+  data = Default, 
+  subset = train.idx,
+  family = 'binomial'
+)
+
+summary(glm.fit.default)
+
+# Obtain a prediction of the default status for each individual in the validation
+glm.proba.default <- predict(glm.fit.default, newdata = Default[-train.idx,], 
+                            type = 'response') 
+glm.pred.default <- ifelse(glm.proba.default > 0.5, 'Yes', 'No')
+
+# Compute the validation set error 
+mean(glm.pred.default != Default[-train.idx,]$default) * 100
+```
+
+## Part (c)
+**Repeat the process in (b) three times using three different splits of the observations into a training set and a validation set. Comment on the results obtained.**
+```{r}
+# Wrapping the entire process into a function 
+fit_logistic_clf_default <- function(train_ratio = 0.8, rn_seed) {
+  set.seed(rn_seed)
+  train.idx <- sample(1:nrow(Default), size = train_ratio * nrow(Default))
+  glm.fit <- glm(default ~ income + balance, data = Default, subset = train.idx, 
+                 family = 'binomial')
+  glm.proba.default <- predict(glm.fit, Default[-train.idx,], type = 'response')
+  glm.pred.default <- ifelse(glm.proba.default > 0.5, 'Yes', 'No') 
+  error.rate <- mean(glm.pred.default != Default[-train.idx, ]$default)
+}
+
+set.seed(1)
+random.seeds <- sample(1:100, size = 20)
+default.error.rates <- sapply(
+  random.seeds, 
+  fit_logistic_clf_default, 
+  train_ratio = 0.8
+)
+names(default.error.rates) <- random.seeds
+default.error.rates
+```
+
+The train/test ratio is the same but the random number seed is different. In the first two cases, the error rate is about the same. In the last case, it is substantially lower. 
+
+## Part (d) 
+**Now consider a logistic regression model that predicts the probability of `default` using `income`, `balance`, and a dummy variable for `student`. Estimate the test error for this model using the validation set approach. Comment on whether or not including a dummy variable for `student` leads to a reduction in the test error rate.**
+```{r}
+# Modify the previous function to also include student as a predictor 
+fit_logistic_clf_default <- function(train_ratio = 0.8, rn_seed) {
+  set.seed(rn_seed)
+  train.idx <- sample(1:nrow(Default), size = train_ratio * nrow(Default))
+  glm.fit <- glm(default ~ income + balance + student, 
+                 data = Default, 
+                 subset = train.idx, 
+                 family = 'binomial')
+  glm.proba.default <- predict(glm.fit, Default[-train.idx,], type = 'response')
+  glm.pred.default <- ifelse(glm.proba.default > 0.5, 'Yes', 'No') 
+  error.rate <- mean(glm.pred.default != Default[-train.idx, ]$default)
+}
+
+set.seed(1)
+random.seeds <- sample(1:100, size = 20)
+default.error.rates.student <- sapply(random.seeds, fit_logistic_clf_default, train_ratio = 0.8)
+names(default.error.rates.student) <- random.seeds 
+default.error.rates.student
+
+# Does the addition of a student variable seem to improve results
+results.df <- data.frame(
+  random_seed = random.seeds, 
+  error_rates_default = default.error.rates, 
+  error_rates_default_student = default.error.rates.student
+)
+
+results.df %>% dplyr::mutate(experiment = 1:dplyr::n()) %>% 
+  dplyr::select(experiment, contains('error')) %>% 
+  data.table::melt(id.vars = c('experiment')) %>% 
+  ggplot(aes(x = experiment, y = value, color = variable, group = variable)) +
+  geom_point() + 
+  geom_line() + 
+  labs(x = 'Experiment Number', y = 'Test Error Rate', title = 'Default Data Set - Validation Set Error Rate') + 
+  theme(legend.position = 'bottom')
+```
+
+Generally, the addition of a `student` variable doesn't improve the test error rate. The test error rate of the original linear model is generally lower than the `student` variant, regardless of the random seed used for making the validation set.
+
+# Exercise 06 - `Default` Logistic Regression with Bootstrapping
+**We continue to consider the use of a logistic regression model to predict the probability of `default` using `income` and `balance` on the `Default` dataset. 
+
+In particular, we will now compute estimates for the standard errors of `income` nad `balance` logistic regression coefficients using 
+1. the bootstrap
+2. the standard formula for computing standard errors with `glm`**
+
+## Part (a)
+**Using the `summary` and `glm` functions, determine the standard errors for the coefficients associated with `income` and `balance` in a multiple regression model that uses both predictors.**
+```{r}
+set.seed(1)
+glm.fit.logreg.default <- glm(default ~ income + balance, data = Default,
+  family = 'binomial'
+)
+summary(glm.fit.logreg.default)
+round(coef(glm.fit.logreg.default), 4)
+```
+
+The GLM coefficients for `income` and `balance` are ~0 and 0.0056 respectively.
+The standard errors of these estimates are $5\times10^{-6}$ and $2.27 \times 10^-4$.
+
+## Part (b) 
+**Write a function `boot.fn()` that takes as input the `Default` data set as well as n index of the observations, and that outputs the coefficient estimates for `income` and `balance` in the multiple logistic regression model.**
+```{r}
+boot.fn <- function(data = Default, idx) {
+  if (is.null(data)) {
+    idx <- 1:nrow(data)
+  }
+  
+  glm.fit <- glm(
+    default ~ income + balance,
+    data = Default, subset = idx, 
+    family = 'binomial'
+  )
+  
+  coef(glm.fit)
+}
+```
+
+## Part (c) 
+**Use the `boot` function together with your `boot.fn()` function estimate the standard errors of the logistic regression coefficients for `income` and `balance`.**
+```{r}
+set.seed(101)
+bootstrapped.fit.default <- boot(data = Default, statistic = boot.fn, R = 1000)
+bootstrapped.fit.default
+```
+
+
+## Part (d) 
+**Comment on the estimated standard errors obtained using `glm` and your bootstrap function.**
+
+- The bootstrapped standard error for `income` is of the same order of magnitude as the one derived analytically.
+- The bootstrapped standard error for `balance` is also of the same order of magnitude.
+- This demonstrates how bootstrapping results are aligned with analytically derived ones. 
+
+# Exercise 07 - LOOCV with `glm`
+**In sections 5.3.2 - 5.3.3, we saw that the `cv.glm()` function can be used in order to compute the LOOCV test error estimate. Alternatively, we can compute these quantities using just the `glm` and `predict.glm` functions. 
+
+You will now take this approach in order to compute the LOOCV error for a simple logistic regression model on the `Weekly` data set.**
+
+## Part (a) 
+**Fit a logistic regression model that predicts `Direction` using `Lag1` and `Lag2`.**
+```{r}
+glm.logreg.weekly.all <- glm(Direction ~ Lag1 + Lag2, data = Weekly, 
+                              family = 'binomial')
+summary(glm.logreg.weekly.all)
+```
+
+## Part (c) 
+**Fit a logistic regression model that predicts `Direction` using `Lag1` and `Lag2` using *all but the first observation*.**
+```{r}
+train.idx <- 2:nrow(Weekly) # Exclude the first observation
+glm.logreg.weekly.minus.first <- glm(
+  Direction ~ Lag1 + Lag2, 
+  data = Weekly, 
+  subset = train.idx, 
+  family = 'binomial'
+)
+```
+
+## Part (c)
+**Use the model from (b) to predict the direction of the first observation. Was this observation correctly classified?**
+```{r}
+pred.first.data.point <- predict(glm.logreg.weekly.minus.first, Weekly[1, ])
+pred.first.data.point <- as.factor(ifelse(pred.first.data.point > 0.5, 'Up', 'Down'))
+print("Actual Response on first index")
+print(Weekly[1,]$Direction)
+
+print("Predicted Response on first index")
+print(pred.first.data.point)
+```
+The movement was classified correctly.
+
+## Part (d) 
+**Write a for loop from $i = 1$ to $i = n$, where $n$ is the number of observations in the dataset. In the loop
+1. Fit a logistic regression model using all but the $i$th observation.
+2. Compute the posterior probability of the market moving up or down on the $i$th observation.
+3. Use the posterior probability for the $i$th observation in order to predict whether or not the market moves up.
+4. Determine whether or not an error was made in predicting for the $i$th obseravtion. Indicate errors as 1 and correct classifications as 0.**
+```{r}
+# Initialise number of observations and a vector to store their predictions
+n.obs <- nrow(Weekly)
+glm.preds.all <- c(NA_character_, rep = n.obs)
+
+for (i in 1:n.obs){
+  train.idx <- c(-1 * i)
+  glm.fit <- glm(Direction ~ Lag1 + Lag2, data = Weekly, subset = train.idx, family = 'binomial')
+  glm.pred.proba <- predict(glm.fit, Weekly[i, ])
+  glm.pred.class <- ifelse(glm.pred.proba > 0.5, 'Up', 'Down')
+  glm.preds.all[i] <- glm.pred.class
+}
+```
+
+## Part (e)
+**Take the average of the $n$ numbers from (d) in order to obtain the LOOCV estimate for the test error. Comment on the results.**
+```{r}
+# Error rate = percentage of casees where predicted and actual responses differ
+mean(glm.preds.all != as.character(Weekly$Direction)) * 100
+
+# What would be the error rate with a Naive classifier? 
+prop.table(table(Weekly$Direction))
+```
+
+- The LOOCV cross-validated test error rate of our logistic regression model is 54%. - This means it's correct about 45% of the time. 
+- The split between Up and Down in the actual data is 55-45.
+- This means a naive classifier which predicts `Up` all the time regardless of `Lag1` or `Lag2` would have an error rate of ~45%.
+- The LOOCV results thus show that the classifier isn't very good. 
+
+# Exercise 08 - Cross Validation on Simulated Data Set 
+**We will now perform cross-validation on a simulated dataset.**
+## Part (a) 
+**Generate a simulated data set as follows.**
+```{r}
+set.seed(1)
+x <- rnorm(100)
+y <- x - 2 * x ^ 2 + rnorm(100)
+```
+
+**In this data set, what is $n$ and $p$? Write out the model used to generate the data in equation form.**
+
+$n = 100$, $p = 2$ ($x$ and $x^2$).
+
+The equation form of the model is 
+$$y = x - 2x^2 + \epsilon$$
+$$\epsilon \sim N(0, 1)$$
+
+## Part (b
+**Create a scatterplot of $X$ against $Y$. Comment on what you find.**
+```{r}
+data.df <- data.frame(x = x, y = y) 
+data.df %>% ggplot(aes(x = x, y = y)) +
+  geom_point() + 
+  geom_smooth() + 
+  geom_abline(color = 'red')
+```
+
+As expected based on the underlying equation, there is a quadratic relatonship between $X$ and $Y$. I don't expect a linear model to capture this relationship without polynomial features.
+
+## Part (c) 
+**Set a random seed and then compute the LOOCV errors that result from the following four models using least squares**
+- $Y = \beta_0 + \beta_1 X + \epsilon$
+- $Y = \beta_0 + \beta_1 X + \beta_2 X^2 \epsilon$
+- $Y = \beta_0 + \beta_1 X + \beta_2 X^2 + \beta_3 X^3 + \epsilon$
+- $Y = \beta_0 + \beta_1 X + \beta_2 X^2 + \beta_3 X^3 + \beta_4 X^4 \epsilon$
+```{r}
+# Set seed
+set.seed(101)
+
+# Fit models
+glm.linear <- glm(y ~ x, data = data.df)
+glm.quadratic <- glm(y ~ x + I(x^2), data = data.df)
+glm.cubic <- glm(y ~ x + I(x ^ 2) + I(x ^ 3), data = data.df)
+glm.quartic <- glm(y ~ x + I(x ^ 2) + I(x ^ 3) + I(x ^ 4), data = data.df)
+
+# Calculate LOOCV error
+cv.err.linear <- cv.glm(data.df, glm.linear)$delta[1]
+cv.err.quadratic <- cv.glm(data.df, glm.quadratic)$delta[1]
+cv.err.cubic <- cv.glm(data.df, glm.cubic)$delta[1]
+cv.err.quartic <- cv.glm(data.df, glm.quartic)$delta[1]
+
+cv.errors.df <- data.frame(
+  model = c('linear', 'quadratic', 'cubic', 'quartic'),
+  raw_deltas = c(cv.err.linear, cv.err.quadratic, cv.err.cubic, cv.err.quartic)
+)
+
+cv.errors.df
+```
+
+- LOOCV test set error is highest for the linear model and is minimal for polynomial models. 
+- Among the polynomial models, the error is lowest for the quadratic model, which s expected.
+- LOOCV error increases slightly for the cubic model and lowers by 0.003 for the 4th order polynomial.
+
+## Part (d)
+**Repeat (c) using another random seed, and report your results. Are your results the same as what you got in (c)? Why?**
+```{r}
+# Literally repeating code but with a different seed
+# Set seed
+set.seed(264)
+
+# Fit models
+glm.linear <- glm(y ~ x, data = data.df)
+glm.quadratic <- glm(y ~ x + I(x^2), data = data.df)
+glm.cubic <- glm(y ~ x + I(x ^ 2) + I(x ^ 3), data = data.df)
+glm.quartic <- glm(y ~ x + I(x ^ 2) + I(x ^ 3) + I(x ^ 4), data = data.df)
+
+# Calculate LOOCV error
+cv.err.linear <- cv.glm(data.df, glm.linear)$delta[1]
+cv.err.quadratic <- cv.glm(data.df, glm.quadratic)$delta[1]
+cv.err.cubic <- cv.glm(data.df, glm.cubic)$delta[1]
+cv.err.quartic <- cv.glm(data.df, glm.quartic)$delta[1]
+
+cv.errors.df <- data.frame(
+  model = c('linear', 'quadratic', 'cubic', 'quartic'),
+  raw_deltas = c(cv.err.linear, cv.err.quadratic, cv.err.cubic, cv.err.quartic)
+)
+
+cv.errors.df
+```
+
+
+The results are exactly the same. This is because changing the random number generator's seed only impacts results for models where randomness is involved in making train/test splits or feature splits. 
+
+With LOOCV, each data point in the training set is deterministically and iteratively used as for calculating test set error. This process has no randomness, which is why changing the random seed did not change the results. 
+
+## Part (e)
+**Which of the models in (c) had the smallest LOOCV? Is this what you expected?
+Explain your answer.**
+- As per expectations
+- Original form of the data was quadratic
+- Lowest error is from quadratic polynomial.
+- Expected error to be higher for cubic and quartic polynomials, though.
+
+## Part (f)
+**Comment on the statistical significance of the coefficient estimates that results from fitting each of the models in (c) using least squares. Do these results agree with conclusions drawn based on the cross-validation results?**
+```{r}
+# Function that will extract the p-values from the GLM objects
+# and return a long data.frame
+get_p_values <- function(fit, model_name){
+  extracted.p.values <- coef(summary(fit))[,4]
+  extracted.params <- names(extracted.p.values)
+  extracted.df <- data.frame(
+    model_name = model_name, 
+    extracted_params = extracted.params, 
+    extracted_values = unname(extracted.p.values)
+  )
+}
+
+# Run the function for each model and get p-values in wide format
+glm.p.values <- rbind(
+  get_p_values(glm.linear, 'linear'),
+  get_p_values(glm.quadratic, 'quadratic'),
+  get_p_values(glm.cubic, 'cubic'),
+  get_p_values(glm.quartic, 'quartic')
+) %>% 
+  data.table::dcast(model_name ~ extracted_params)
+
+glm.p.values
+```
+
+In all three models, the p-values associated with the linear and quadratic terms are practically zero, and thus provide evidence for statistical significance. 
+
+However, coefficients for x^3$ have p-values much higher than the 0.05 threshold, which suggests the cubic term is insignificant regardless of choice of model.
+
+The p-value for the 4th order term is still higher than 5% but it is much lower than that of the 3rd order term. This intuitively makes sense since some variation of 4th order terms may follow the variation of 2nd order terms, and this is most likely a result of correlation between the two predictors. 
+
+## Exercise 09 - `Boston` with Bootstrapping
+**We will now consider the `Boston` housing data set from the `ISLR2` package.**
+
+## Part (a)
+**Based on this data set, provide an estimate for the population mean of `medv`. Call this estimate $\hat\mu$.**
+```{r}
+(boston.mu.hat <- mean(Boston$medv))
+```
+
+## Part (b) 
+**Provide an estimate of the standard error of $\hat\mu$.**
+```{r}
+# Standard error = standard deviation / sqrt(number of observations)
+(boston.std.error <- sd(Boston$medv) / sqrt(nrow(Boston)))
+```
+
+## Part (c) 
+**Now estimate the standard error of $\hat\mu$ using the bootstrap. How does this compare to your answer from (b)?**
+```{r}
+set.seed(1)
+boston.boot.fn <- function(data = Boston, idx){
+  if (is.null(idx)) {
+    idx <- 1:nrow(Boston)
+  }
+  
+  # Bootstrap function will return the mean of the median value
+  mean(data[idx,]$medv)
+}
+
+(boston.medv.bootstrap <- boot(data = Boston, statistic = boston.boot.fn, R = 1000))
+```
+
+The bootstrapped estimate of the standard error is 0.4141which is only slightly higher than the analytical value of 0.409.
+
+## Part(d)
+**Based on your bootstrap estimate from (c), provide a 95% confidence interval for the mean of $medv$. Compare it to the results obtained using `t.test(Boston$medv)`.**
+```{r}
+boston.std <- sd(boston.medv.bootstrap$t)
+boston.mean.upper.bound <- boston.mu.hat + 2 * boston.std 
+boston.mean.lower.bound <- boston.mu.hat - 2 - boston.std 
+print(
+  paste0(
+    "95% CI for bootstrapped estimate of medv is between [",
+    round(boston.mean.lower.bound, 4),  ", ",  round(boston.mean.upper.bound, 4), 
+  "]"
+))
+
+# Compare with t-test
+t.test(Boston$medv)
+```
+
+The bootstrap upper bound seems relatively close to the equivalent t-test value.
+However, t-test's lower bound is significantly higher than that returned by bootstrapping.
+
+## Part (e)
+**Based on this data set, provide an estimate $\hat\mu_{med}$ for the *median* value of `medv` in the population.**
+```{r}
+(boston.median.medv <- median(Boston$medv))
+```
+
+## Part (f)
+**We now would like to estimate the standard error of $\hat\mu_{med}$. Unfortunately, there is no simple formula for computing the standard error of the median. Instead, estimate the standard error of the median using the bootstrap. Comment on your findings.**
+```{r}
+# Create a boostrapping function that returns the median instead of the mean
+boston.boot.fn.median <- function(data, idx){
+  if (is.null(idx)) {
+    idx = 1:nrow(data)
+  }
+  
+  median(data[idx, ]$medv)
+}
+
+# Bootstrap iterations based on the dataset 
+(boston.medv.bootstrap.median <- boot(data = Boston, statistic = boston.boot.fn.median, R = 1000))
+```
+
+Based on bootstrapping, the standard error of the median is 0.377, which is still quite small compared to the estimand. The median value itself is exactly the same as that calculated using the raw vector of the dataset.
+
+## Part (g)
+**Based on this data set, provide an estimate for the tenth percentle of `medv` in Boston census tracts. Call this quantity $\hat\mu_{0.1}$.**
+```{r}
+(boston.quantile.10.medv <- quantile(Boston$medv, 0.1))
+```
+
+## Part (h)
+**Use the boostrap to estimate the standard error of $\hat\mu_{0.1}$. Comment on your findings.**
+```{r}
+boston.boot.fn.quantile <- function(data, idx, p) {
+  if (is.null(idx)) {
+    idx <- 1:nrow(data)
+  }
+  
+  bootstrap.quantile <- quantile(data[idx,]$medv, p)
+}
+
+(boston.quantile.10.bootstrap <- boot(
+  data = Boston, 
+  statistic = boston.boot.fn.quantile,
+  R = 1000,
+  p = 0.1
+))
+```
+
+The bootstrapped estimate is exactly the same as the raw estimate, which we expect.
+However, the standard error is 0.492, which is slightly large but still quite small compared to the mean value itself. 

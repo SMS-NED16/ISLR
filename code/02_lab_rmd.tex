@@ -1,0 +1,2175 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{lmodern}
+\usepackage{ifxetex,ifluatex}
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\hypersetup{
+  pdftitle={ISLR - Chapter 3 - Exercises},
+  pdfauthor={Saad M. Siddiqui},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+\urlstyle{same} % disable monospaced font for URLs
+\usepackage[margin=1in]{geometry}
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.77,0.63,0.00}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\ifluatex
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+
+\title{ISLR - Chapter 3 - Exercises}
+\author{Saad M. Siddiqui}
+\date{2/20/2022}
+
+\begin{document}
+\maketitle
+
+\hypertarget{conceptual}{%
+\section{Conceptual}\label{conceptual}}
+
+\hypertarget{exercise-1-p-values}{%
+\subsection{\texorpdfstring{Exercise 1:
+\(p\)-values}{Exercise 1: p-values}}\label{exercise-1-p-values}}
+
+\textbf{Describe the null hypotheses to which the \(p\)-values given in
+Table 3.4 correspond. explain what conclusions you can draw based on
+these \(p\)-values. Your explanation should be phrased in terms of
+\texttt{sales}, \texttt{tv}, \texttt{radio}, and \texttt{newspaper}.}
+
+We can conclude that - in the absence of any \texttt{tv},
+\texttt{radio}, or \texttt{newspaper} \texttt{sales}, sales of the
+product willbe non-zero. - there is a relationship between \texttt{tv}
+expenditure and \texttt{sales}, and data suggest that increment in
+\texttt{sales} due to one unit increment in \texttt{tv} or
+\texttt{radio} expenditure is statistically significant and not due to
+random chance assuming the null hypothesis is true. - no statistically
+significant relationship was found between expenditure on
+\texttt{newspaper} advertising and \texttt{sales}.
+
+To simplify, the null hypothesis assumes that there is no statistically
+significant relationship between \texttt{sales} and expenditure on
+\texttt{tv}, \texttt{newspaper}, or \texttt{radio}. The \texttt{p}-value
+associated with each of these predictors is the conditional probability
+of observing a relationship between \texttt{sales} and the predictor
+assuming the null hypothesis is true. This probability is very high due
+for the \texttt{intercept}, \texttt{TV}, and \texttt{radio} but very
+large for \texttt{newpspaper}, which means we cannot reject the null
+hypothesis for \texttt{newspaper} but can reject the null hypothesis in
+favour of the alternate hypothesis for \texttt{tv}, \texttt{radio}, and
+\texttt{intercept}.
+
+\hypertarget{exercise-2-knn-classifier-vs-regressor}{%
+\subsection{Exercise 2: KNN Classifier vs
+Regressor}\label{exercise-2-knn-classifier-vs-regressor}}
+
+\textbf{Carefully explain the differences between the KNN classifier and
+KNN regression methods.} Both are non-parametric/instance-based approach
+for assigning a response \(\hat{y}\) to a data point \(x_0\) based on
+the response \(y_{1...N_0}\) of some \(N_0\) nearest neighbors.
+
+However, the nature of the response and the method for deriving it is
+different. The KNN regression method considers the nearest \(N_0\) data
+points for \(x_0\) and assumes \(\hat{y_0}\) =
+\(\frac{1}{N_0}\Sigma_{i...N_0}(y_i)\). The response is
+\textbf{continuous}.
+
+The KNN classifier considers the nearest \(N_0\) data points for \(x_0\)
+and assumes the predicted class for \(x_0\) is the most frequently
+occurring/majority/modal class of the neighbors. More specifically, it
+calculates the probability that \(x_0\) belongs to a particular class
+based on the frequency of classes in the \(N_0\) neigbhors. The response
+is \textbf{categorical} or \textbf{discrete}.
+
+\hypertarget{exercise-3-students-and-salaries}{%
+\subsection{Exercise 3: Students and
+Salaries}\label{exercise-3-students-and-salaries}}
+
+\textbf{Suppose we have a dataset with five predictors: \(X_1\) = GPA,
+\(X_2\) = IQ, \(X_3\) = Level (1 for College, 0 for High School),
+\(X_4\) = Interaction between GPA and IQ, \$X\_5\% = Interaction between
+GPA and Level. The response is starting salary after graduation (in
+thousands of dollars). Suppose we use least squares to fit the model and
+get \(\hat{\beta_0}\) = 50, \(\hat{\beta_1}\) = 20, \(\hat{\beta_2}\) =
+0.07, \(\hat{\beta_3}\) = 35, \(\hat{\beta_4}\) = 0.01,
+\(\hat{\beta_5}\) = -10.}
+
+\hypertarget{parta}{%
+\subsubsection{Part(a)}\label{parta}}
+
+\textbf{Which answer is correct and why?} \textbf{1. For a fixed value
+of IQ and GPA, high school graduates earn more, on average, than college
+graduates.} \textbf{2. For a fixed value of IQ and GPA, college
+graduates earn more, on average, than high school graduates.} \textbf{3.
+For a fixed value of IQ and GPA, high school graduates earn more, on
+average, than high school graduates provided that the GPA is high
+enough.} \textbf{4. For a fixed value of IQ and GPA, college graduates
+earn more, on average, than high school graduates provided that the GPA
+is high enough.}
+
+The regression equation is \$\$ \hat{y} = \beta\_0 + \beta\_1 \times GPA
++ \beta\_2 \times IQ + \beta\_3 \times Level + \beta\_4 \times GPA
+\times IQ + \beta\_5 \times GPA \times Level
+
+\textbackslash{} \hat{y}= \beta\_0 + (\beta\_1 + \beta\_4 \times IQ +
+\beta\_5\times Level)\times GPA + \beta\_2 \times IQ + \beta\_3
+\times Level
+
+\textbackslash{} \hat{y} = 50 + (20 + 0.01\times IQ - 10 \times Level)
+\times GPA + 20 \times IQ + 35 \times Level \$\$ For the same value of
+IQ and GPA, the regression equation changes as follows with \(Level\)
+
+\[
+\hat{y_{School}} = 50 + (20 + 0.01 \times IQ) \times GPA + 20 \times IQ
+\\
+\hat{y_{College}} = 85 + (10 + 0.01 \times IQ) \times GPA + 20 \times IQ
+\]
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{iq }\OtherTok{\textless{}{-}} \FunctionTok{seq}\NormalTok{(}\DecValTok{80}\NormalTok{, }\DecValTok{130}\NormalTok{, }\FloatTok{0.1}\NormalTok{)         }
+\NormalTok{gpa }\OtherTok{\textless{}{-}} \FunctionTok{seq}\NormalTok{(}\FloatTok{2.0}\NormalTok{, }\FloatTok{4.0}\NormalTok{, }\FloatTok{0.1}\NormalTok{)}
+\NormalTok{iq.gpa.df }\OtherTok{\textless{}{-}} \FunctionTok{data.frame}\NormalTok{(}
+  \AttributeTok{iq =} \FunctionTok{rep}\NormalTok{(iq, }\AttributeTok{each =} \FunctionTok{length}\NormalTok{(gpa)), }
+  \AttributeTok{gpa =} \FunctionTok{rep}\NormalTok{(gpa, }\FunctionTok{length}\NormalTok{(iq))}
+\NormalTok{) }
+\CommentTok{\# iq.gpa.df \%\textgreater{}\% dplyr::group\_by(iq) \%\textgreater{}\% dplyr::summarize(min\_gpa = min(gpa), max\_gpa = max(gpa), total = n())}
+
+\NormalTok{iq.gpa.df }\OtherTok{\textless{}{-}}\NormalTok{ iq.gpa.df }\SpecialCharTok{\%\textgreater{}\%} 
+\NormalTok{  dplyr}\SpecialCharTok{::}\FunctionTok{mutate}\NormalTok{(}
+    \AttributeTok{earnings\_school =} \DecValTok{50} \SpecialCharTok{+}\NormalTok{ (}\DecValTok{20} \SpecialCharTok{+} \FloatTok{0.01} \SpecialCharTok{*}\NormalTok{ iq) }\SpecialCharTok{*}\NormalTok{ gpa }\SpecialCharTok{+} \DecValTok{20} \SpecialCharTok{*}\NormalTok{ iq,}
+    \AttributeTok{earnings\_college =} \DecValTok{85} \SpecialCharTok{+}\NormalTok{ (}\DecValTok{10} \SpecialCharTok{+} \FloatTok{0.01} \SpecialCharTok{*}\NormalTok{ iq) }\SpecialCharTok{*}\NormalTok{ gpa }\SpecialCharTok{+} \DecValTok{20} \SpecialCharTok{*}\NormalTok{ iq}
+\NormalTok{  )}
+
+\NormalTok{iq.gpa.df }\SpecialCharTok{\%\textgreater{}\%}\NormalTok{ dplyr}\SpecialCharTok{::}\FunctionTok{filter}\NormalTok{(earnings\_school }\SpecialCharTok{\textgreater{}}\NormalTok{ earnings\_college) }\SpecialCharTok{\%\textgreater{}\%} 
+\NormalTok{  dplyr}\SpecialCharTok{::}\FunctionTok{summarize}\NormalTok{(}\AttributeTok{min\_iq =} \FunctionTok{min}\NormalTok{(iq), }\AttributeTok{max\_iq =} \FunctionTok{max}\NormalTok{(iq), }
+                   \AttributeTok{min\_gpa =} \FunctionTok{min}\NormalTok{(gpa), }\AttributeTok{max\_gpa =} \FunctionTok{max}\NormalTok{(gpa), }
+                   \AttributeTok{max\_diff =} \FunctionTok{max}\NormalTok{(earnings\_school }\SpecialCharTok{{-}}\NormalTok{ earnings\_college))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##   min_iq max_iq min_gpa max_gpa max_diff
+## 1     80    130     3.5       4        5
+\end{verbatim}
+
+This elementary analysis shows that if the GPA is high enough, high
+school students can outearn college students although not by a large
+amount.
+
+\hypertarget{part-b}{%
+\subsubsection{Part (b)}\label{part-b}}
+
+\textbf{Predict the salary of a college graduate with IQ of 110 and GPA
+of 4.0.}
+
+\(\hat{y} = \beta_0 + \beta_1 \times GPA + \beta_2 \times IQ + \beta_3 \times Level + \beta_4 \times GPA \times IQ + \beta_5 \times GPA \times Level\)
+
+\(\hat{y} = 50 + 20 \times GPA + 0.07 \times IQ + 35 \times Level + 0.01 \times GPA \times IQ -10 \times GPA \times Level\)
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{iq }\OtherTok{\textless{}{-}} \DecValTok{110} 
+\NormalTok{gpa }\OtherTok{\textless{}{-}} \FloatTok{4.0}
+\NormalTok{is.college }\OtherTok{\textless{}{-}} \FloatTok{1.0}
+
+\NormalTok{salary }\OtherTok{\textless{}{-}} \DecValTok{50} \SpecialCharTok{+} \DecValTok{20} \SpecialCharTok{*}\NormalTok{ gpa }\SpecialCharTok{+} \FloatTok{0.07} \SpecialCharTok{*}\NormalTok{ iq }\SpecialCharTok{+} \DecValTok{35} \SpecialCharTok{*}\NormalTok{ is.college }\SpecialCharTok{+} \FloatTok{0.01} \SpecialCharTok{*}\NormalTok{ gpa }\SpecialCharTok{*}\NormalTok{ iq }\SpecialCharTok{{-}} \DecValTok{10} \SpecialCharTok{*}\NormalTok{ gpa }\SpecialCharTok{*}\NormalTok{ is.college}
+
+\FunctionTok{print}\NormalTok{(}\FunctionTok{paste0}\NormalTok{(}\StringTok{"Salary for such a student is $"}\NormalTok{, salary }\SpecialCharTok{*} \DecValTok{1000}\NormalTok{))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] "Salary for such a student is $137100"
+\end{verbatim}
+
+\hypertarget{part-c}{%
+\subsubsection{Part (c)}\label{part-c}}
+
+\textbf{True or False: Since the coefficient for GPA/IQ interaction term
+is very small, there is very little evidence of an interaction effect.
+Justify your answer.}
+
+\textbf{False}. Significance is not determined by the magnitude of the
+coefficient. Significance is determined by the \(p\) value. Even if the
+coefficient of the GPA/IQ interaction term is very small, in the absence
+of a \(p\) value we can't say whether this is evidence of an interaction
+effect.
+
+\hypertarget{exercise-4-linear-and-cubic-regression}{%
+\subsection{Exercise 4: Linear and Cubic
+Regression}\label{exercise-4-linear-and-cubic-regression}}
+
+\textbf{I collect a set of data (\(n\) = 100 observations) containing a
+simple predictor and quantitative response. then fit a linear regression
+model to the data, as well as a separate cubic regression i.e.~Y =
+\(\beta_0 + \beta_1X + \beta_2X^2 + \beta_3X^3 + \epsilon\)}
+
+\hypertarget{part-a}{%
+\subsubsection{Part (a)}\label{part-a}}
+
+\textbf{Suppose the true relationship between \(X\) and \(Y\) is linear
+i.e .\(Y = B_0 + B_1X + \epsilon\). Consider the training residual sum
+of squares (RSS) for the linear regression, and also the training RSS
+for the cubic regression. Would we expect one to be lower than the
+other, would we expect them to be the same, or is there not enough
+information to tell? Justify your answer.}
+
+We'd expect the training RSS to be higher for the cubic regressor than
+the linear regressor. Addition of second and third order polynomial
+features will increase variance and allow the model to overfit the data,
+which will decrease training RSS.
+
+\hypertarget{part-b-1}{%
+\subsubsection{Part (b)}\label{part-b-1}}
+
+\textbf{Answer (a) using test rather than training RSS} Test RSS will be
+much higher for the cubic regressor compared to the linear regressor
+because the true underlying relatioship is linear whereas the cubic
+regressor has learnt to overfit to noise in the training data.
+
+\hypertarget{part-c-1}{%
+\subsubsection{Part (c)}\label{part-c-1}}
+
+\textbf{Suppose the true relationship between \(X\) and \(Y\) is not
+linear, but we don't know how far it is from linear. Consider the
+training RSS for the linear and cubic regressions. Would we expect one
+to be lower tha nthe other, to be the same ,or is there not enough
+information to tell? Justify your answer.} Will still expect training
+RSS to be lower for cubic regression than linear regression. The extent
+to which the errors differ depend on just how non-linear the data is. If
+the data is very non-linear, then the cubic regressor will have a much
+lower training RSS. If the data is only slightly non-linear, then the
+cubic regressor will have a slightly lower training RSS.
+
+\hypertarget{part-d}{%
+\subsubsection{Part (d)}\label{part-d}}
+
+\textbf{Answer (c) using test RSS rather than training RSS.} Test RSS
+for cubic regressor will be lower than linear regressor's. Again, extent
+of improvement depends on just how non-linear the data is and whether
+the non-linearity is closer to a straight line than it is to a 3rd
+degree polynomial.
+
+\hypertarget{applied}{%
+\section{Applied}\label{applied}}
+
+\hypertarget{exercise-8---simple-linear-regression}{%
+\subsection{Exercise 8 - Simple Linear
+Regression}\label{exercise-8---simple-linear-regression}}
+
+\hypertarget{parta-1}{%
+\subsubsection{Part(a)}\label{parta-1}}
+
+\textbf{Use the \texttt{lm} function to perform a simple linear
+regression with \texttt{mpg} as the response and \texttt{horsepower} as
+the predictor. Use the \texttt{summary} function to print the results.
+Comment on the output.}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{lm.mpg }\OtherTok{\textless{}{-}} \FunctionTok{lm}\NormalTok{(mpg }\SpecialCharTok{\textasciitilde{}}\NormalTok{ horsepower, }\AttributeTok{data =}\NormalTok{ Auto)}
+\FunctionTok{summary}\NormalTok{(lm.mpg)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## Call:
+## lm(formula = mpg ~ horsepower, data = Auto)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -13.5710  -3.2592  -0.3435   2.7630  16.9240 
+## 
+## Coefficients:
+##              Estimate Std. Error t value Pr(>|t|)    
+## (Intercept) 39.935861   0.717499   55.66   <2e-16 ***
+## horsepower  -0.157845   0.006446  -24.49   <2e-16 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 4.906 on 390 degrees of freedom
+## Multiple R-squared:  0.6059, Adjusted R-squared:  0.6049 
+## F-statistic: 599.7 on 1 and 390 DF,  p-value: < 2.2e-16
+\end{verbatim}
+
+\hypertarget{comments}{%
+\paragraph{Comments}\label{comments}}
+
+\textbf{Is there a relationship between the predictor and response?}
+Yes. The \(p\)-value associated with the predictor is very small,
+suggesting that assuming there was no relationship between the predictor
+and response, the probability of observing a strong association between
+the predictor and response due to random chance is very small.
+
+Furthermore, the F-statistic of this regressor is
+\textgreater\textgreater{} 1, which also confirms that there is an
+association between the predictor and response.
+
+\textbf{How strong is the relationship between the predictor and the
+response?}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{response.mean }\OtherTok{\textless{}{-}} \FunctionTok{mean}\NormalTok{(Auto}\SpecialCharTok{$}\NormalTok{mpg)}
+\NormalTok{fit.rse }\OtherTok{\textless{}{-}} \FunctionTok{summary}\NormalTok{(lm.mpg)}\SpecialCharTok{$}\NormalTok{sigma}
+\FunctionTok{print}\NormalTok{(}\FunctionTok{paste0}\NormalTok{(}\StringTok{"Response Mean: "}\NormalTok{, }\FunctionTok{round}\NormalTok{(response.mean, }\DecValTok{4}\NormalTok{), }\StringTok{" | RSE = "}\NormalTok{, }\FunctionTok{round}\NormalTok{(fit.rse, }\DecValTok{4}\NormalTok{), }\StringTok{" | Percentage Error = "}\NormalTok{, }\FunctionTok{round}\NormalTok{(fit.rse }\SpecialCharTok{/}\NormalTok{ response.mean }\SpecialCharTok{*} \DecValTok{100}\NormalTok{, }\DecValTok{2}\NormalTok{)))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] "Response Mean: 23.4459 | RSE = 4.9058 | Percentage Error = 20.92"
+\end{verbatim}
+
+The residual standard error is a bit high, which suggests that the
+relationship is moderate. The R-squared statistic is
+\textasciitilde60\%, which means 60\% of the variance in the response
+was explained by regression, which is again evidence of moderate
+relationship.
+
+\textbf{Is the relationship between the predictor and response positive
+or negative?} - The relationship is negative. - For every unit increase
+in \texttt{horsepower}, \texttt{mpg} decreases by -0.1578 units.
+
+\textbf{What is the predicted \texttt{mpg} associated with a
+\texttt{horsepower} of 98? What are the associated 95\% confidence and
+prediction intervals?}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Confidence Interval}
+\FunctionTok{rbind}\NormalTok{(}
+  \FunctionTok{data.frame}\NormalTok{(}
+    \FunctionTok{list}\NormalTok{(}
+      \StringTok{\textquotesingle{}data\textquotesingle{}} \OtherTok{=} \DecValTok{98}\NormalTok{, }
+      \StringTok{\textquotesingle{}interval\textquotesingle{}} \OtherTok{=} \StringTok{\textquotesingle{}confidence\textquotesingle{}}\NormalTok{,}
+      \FunctionTok{predict}\NormalTok{(lm.mpg, }\FunctionTok{data.frame}\NormalTok{(}\AttributeTok{horsepower =} \DecValTok{98}\NormalTok{), }\AttributeTok{interval =} \StringTok{\textquotesingle{}confidence\textquotesingle{}}\NormalTok{)}
+\NormalTok{    )}
+\NormalTok{  ), }
+  
+    \FunctionTok{data.frame}\NormalTok{(}
+    \FunctionTok{list}\NormalTok{(}
+      \StringTok{\textquotesingle{}data\textquotesingle{}} \OtherTok{=} \DecValTok{98}\NormalTok{, }
+      \StringTok{\textquotesingle{}interval\textquotesingle{}} \OtherTok{=} \StringTok{\textquotesingle{}prediction\textquotesingle{}}\NormalTok{,}
+      \FunctionTok{predict}\NormalTok{(lm.mpg, }\FunctionTok{data.frame}\NormalTok{(}\AttributeTok{horsepower =} \DecValTok{98}\NormalTok{), }\AttributeTok{interval =} \StringTok{\textquotesingle{}prediction\textquotesingle{}}\NormalTok{)}
+\NormalTok{    )}
+\NormalTok{  )}
+\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##    data   interval      fit      lwr      upr
+## 1    98 confidence 24.46708 23.97308 24.96108
+## 11   98 prediction 24.46708 14.80940 34.12476
+\end{verbatim}
+
+\hypertarget{partb}{%
+\subsubsection{Part(b)}\label{partb}}
+
+\textbf{Plot the response and the predictor. Use the \texttt{abline}
+function to display the least squares regression line.}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{plot}\NormalTok{(Auto}\SpecialCharTok{$}\NormalTok{horsepower, Auto}\SpecialCharTok{$}\NormalTok{mpg, }\AttributeTok{main =} \StringTok{\textquotesingle{}Auto Dataset {-} MPG against Horsepower\textquotesingle{}}\NormalTok{)}
+\FunctionTok{abline}\NormalTok{(lm.mpg}\SpecialCharTok{$}\NormalTok{coefficients, }\AttributeTok{col =} \StringTok{\textquotesingle{}red\textquotesingle{}}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{02_lab_rmd_files/figure-latex/unnamed-chunk-6-1.pdf}
+
+\hypertarget{partc}{%
+\subsubsection{Part(c)}\label{partc}}
+
+\textbf{Use the plot function to produce diagnositc plots of the least
+squares regression fit. Comment on any problems you see with the fit.}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{par}\NormalTok{(}\AttributeTok{mfrow =} \FunctionTok{c}\NormalTok{(}\DecValTok{2}\NormalTok{, }\DecValTok{2}\NormalTok{))}
+\FunctionTok{plot}\NormalTok{(lm.mpg)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{02_lab_rmd_files/figure-latex/unnamed-chunk-7-1.pdf} -
+Residuals show evidence of non-linearity which means we may want to use
+polynomial regression. - Standardized residuals show that there isn't
+constant variance in the error terms. - Some data points also have a
+large standardized residual and leverage, and thus closer to Cook's
+distance --\textgreater{} we may want to review these data points.
+
+\hypertarget{exercise-9}{%
+\subsection{Exercise 9}\label{exercise-9}}
+
+\textbf{The question involves the use of the multiple linear regression
+on the \texttt{Auto} dataset.} \#\#\# Part (a) \textbf{Produce a
+scatterplot matrix which includes all of the variables in the dataset.}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{plot}\NormalTok{(Auto, }\AttributeTok{col =} \StringTok{\textquotesingle{}blue\textquotesingle{}}\NormalTok{, }\AttributeTok{main =} \StringTok{"Auto Dataset {-} Variable pairplot"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{02_lab_rmd_files/figure-latex/unnamed-chunk-8-1.pdf}
+
+\hypertarget{part-b-2}{%
+\subsubsection{Part (b)}\label{part-b-2}}
+
+\textbf{Compute the matrix of correlations between the variables using
+the function \texttt{cor}.}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{round}\NormalTok{(}\FunctionTok{cor}\NormalTok{(Auto[, }\SpecialCharTok{{-}}\DecValTok{9}\NormalTok{]), }\DecValTok{3}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##                 mpg cylinders displacement horsepower weight acceleration
+## mpg           1.000    -0.778       -0.805     -0.778 -0.832        0.423
+## cylinders    -0.778     1.000        0.951      0.843  0.898       -0.505
+## displacement -0.805     0.951        1.000      0.897  0.933       -0.544
+## horsepower   -0.778     0.843        0.897      1.000  0.865       -0.689
+## weight       -0.832     0.898        0.933      0.865  1.000       -0.417
+## acceleration  0.423    -0.505       -0.544     -0.689 -0.417        1.000
+## year          0.581    -0.346       -0.370     -0.416 -0.309        0.290
+## origin        0.565    -0.569       -0.615     -0.455 -0.585        0.213
+##                year origin
+## mpg           0.581  0.565
+## cylinders    -0.346 -0.569
+## displacement -0.370 -0.615
+## horsepower   -0.416 -0.455
+## weight       -0.309 -0.585
+## acceleration  0.290  0.213
+## year          1.000  0.182
+## origin        0.182  1.000
+\end{verbatim}
+
+\hypertarget{part-c-2}{%
+\subsubsection{Part (c)}\label{part-c-2}}
+
+\textbf{Use the \texttt{lm} function to perform multiple linear
+regression with \texttt{mpg} as the response and all other variables
+except \texttt{name} as the predictors. Use \texttt{summary} to print
+the results. Comment on the output.}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# After considering solutions at https://rpubs.com/lmorgan95/ISLR\_CH3\_Solutions, might be a good idea to encode the origin feature manually. }
+\CommentTok{\# Auto$origin \textless{}{-} factor(Auto$origin, labels = c("American", "European", "Japanese"))}
+\NormalTok{lm.mpg.multi }\OtherTok{\textless{}{-}} \FunctionTok{lm}\NormalTok{(mpg }\SpecialCharTok{\textasciitilde{}}\NormalTok{ . }\SpecialCharTok{{-}}\NormalTok{ name, }\AttributeTok{data =}\NormalTok{ Auto)}
+\FunctionTok{summary}\NormalTok{(lm.mpg.multi)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## Call:
+## lm(formula = mpg ~ . - name, data = Auto)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -9.5903 -2.1565 -0.1169  1.8690 13.0604 
+## 
+## Coefficients:
+##                Estimate Std. Error t value Pr(>|t|)    
+## (Intercept)  -17.218435   4.644294  -3.707  0.00024 ***
+## cylinders     -0.493376   0.323282  -1.526  0.12780    
+## displacement   0.019896   0.007515   2.647  0.00844 ** 
+## horsepower    -0.016951   0.013787  -1.230  0.21963    
+## weight        -0.006474   0.000652  -9.929  < 2e-16 ***
+## acceleration   0.080576   0.098845   0.815  0.41548    
+## year           0.750773   0.050973  14.729  < 2e-16 ***
+## origin         1.426141   0.278136   5.127 4.67e-07 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 3.328 on 384 degrees of freedom
+## Multiple R-squared:  0.8215, Adjusted R-squared:  0.8182 
+## F-statistic: 252.4 on 7 and 384 DF,  p-value: < 2.2e-16
+\end{verbatim}
+
+\hypertarget{comments-1}{%
+\paragraph{Comments}\label{comments-1}}
+
+\textbf{Is there a relationship between the predictors and response?} -
+F-statistic is 252.4 which is \textgreater\textgreater{} 1, so there is
+indeed a relationship between the predictors and response. - The p-value
+associated with the F-statistic is also practically 0, so we can accept
+the F-statistic as significant. - This, in turn, means that we can
+reject the null hypothesis that the coefficients associated with all the
+predictors are 0.
+
+\textbf{Which predictors appear t have a statistically significant
+relationship with the response?} - Not all predictors are associated
+with the response. - Specifically, \texttt{cylinders},
+\texttt{horsepower}, \texttt{acceleration} have very large \(p\)-values,
+suggesting no statistically significant association between these
+variables and the data.
+
+\textbf{What does the coefficient for the \texttt{year} variable
+suggest?} The coefficient for \texttt{year} is
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{lm.mpg.multi}\SpecialCharTok{$}\NormalTok{coeff[}\StringTok{\textquotesingle{}year\textquotesingle{}}\NormalTok{]}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##      year 
+## 0.7507727
+\end{verbatim}
+
+which suggests that for every additional year, the \texttt{mpg}
+increases by 0.777 units. This could mean that as cars continue to be
+used year-on-year, their mileage improves ever so slightly.
+
+\textbf{Use \texttt{plot} to produce diagnostic plots of the linear
+regression fit. Comment on any problems you see with the fit. Do the
+residual plots suggest any unusually large outliers? Deos the leverage
+plot identify any observations with very high leverage?}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{par}\NormalTok{(}\AttributeTok{mfrow =} \FunctionTok{c}\NormalTok{(}\DecValTok{2}\NormalTok{,}\DecValTok{2}\NormalTok{))}
+\FunctionTok{plot}\NormalTok{(lm.mpg)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{02_lab_rmd_files/figure-latex/unnamed-chunk-12-1.pdf}
+\#\#\#\# Comments - Residuals show evidence of non-linearity in the
+data. We may have to use polynomial regresssion by creating higher order
+terms for some features. - Standardized residuals also so non-linearity,
+although they are between -3 and +3. - There are a lot of data points
+close to Cook's distance, which suggests we do have data points with
+high leverage. - We also have data points with high leverage as well as
+high residuals. These have been extracted programmatically below.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{lm.mpg.multi.high.leverage }\OtherTok{\textless{}{-}}\NormalTok{ broom}\SpecialCharTok{::}\FunctionTok{augment}\NormalTok{(lm.mpg.multi) }\SpecialCharTok{\%\textgreater{}\%} 
+\NormalTok{  dplyr}\SpecialCharTok{::}\FunctionTok{select}\NormalTok{(.rownames, .fitted, .hat, .resid, .std.resid, .cooksd) }\SpecialCharTok{\%\textgreater{}\%} 
+\NormalTok{  dplyr}\SpecialCharTok{::}\FunctionTok{arrange}\NormalTok{(}\FunctionTok{desc}\NormalTok{(.cooksd))}
+\NormalTok{lm.mpg.multi.high.leverage }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{head}\NormalTok{(}\DecValTok{10}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## # A tibble: 10 x 6
+##    .rownames .fitted   .hat .resid .std.resid .cooksd
+##    <chr>       <dbl>  <dbl>  <dbl>      <dbl>   <dbl>
+##  1 14          18.9  0.190   -4.88      -1.63  0.0778
+##  2 394         34.5  0.0492   9.54       2.94  0.0558
+##  3 327         31.5  0.0287  11.9        3.63  0.0488
+##  4 387         28.4  0.0333   9.57       2.92  0.0368
+##  5 326         32.9  0.0196  11.4        3.44  0.0296
+##  6 245         32.1  0.0195  11.0        3.34  0.0278
+##  7 323         33.5  0.0137  13.1        3.95  0.0271
+##  8 112         27.6  0.0242  -9.59      -2.92  0.0264
+##  9 330         35.0  0.0210   9.64       2.93  0.0230
+## 10 45           6.25 0.0382   6.75       2.07  0.0213
+\end{verbatim}
+
+Using \texttt{broom} and \texttt{ggplot2}, data points with
+\texttt{CooksD} \(>= \frac{4}{n}\) - a common threshold - are idenified.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{lm.mpg.multi.high.leverage}\SpecialCharTok{$}\NormalTok{cooksd\_cutoff }\OtherTok{\textless{}{-}} \FunctionTok{factor}\NormalTok{(}
+  \FunctionTok{ifelse}\NormalTok{(lm.mpg.multi.high.leverage}\SpecialCharTok{$}\NormalTok{.cooksd }\SpecialCharTok{\textgreater{}=} \DecValTok{4} \SpecialCharTok{/} \FunctionTok{nrow}\NormalTok{(Auto), }\StringTok{\textquotesingle{}True\textquotesingle{}}\NormalTok{, }\StringTok{\textquotesingle{}False\textquotesingle{}}
+\NormalTok{  )}
+\NormalTok{)}
+
+\FunctionTok{ggplot}\NormalTok{(lm.mpg.multi.high.leverage, }\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ .hat, }\AttributeTok{y =}\NormalTok{ .std.resid, }\AttributeTok{col =}\NormalTok{ cooksd\_cutoff))  }\SpecialCharTok{+}
+  \FunctionTok{geom\_point}\NormalTok{() }\SpecialCharTok{+}
+  \FunctionTok{theme}\NormalTok{(}\AttributeTok{legend.position =} \StringTok{\textquotesingle{}bottom\textquotesingle{}}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{labs}\NormalTok{(}
+    \AttributeTok{title =} \StringTok{\textquotesingle{}Auto {-} Residuals vs Leverage\textquotesingle{}}\NormalTok{,}
+    \AttributeTok{x =} \StringTok{\textquotesingle{}Leverage\textquotesingle{}}\NormalTok{, }\AttributeTok{y =} \StringTok{\textquotesingle{}Standardized Residuals\textquotesingle{}}\NormalTok{, }
+    \AttributeTok{col =} \StringTok{\textquotesingle{}Cooks Distance \textgreater{}= 4/n\textquotesingle{}}
+\NormalTok{  )}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{02_lab_rmd_files/figure-latex/unnamed-chunk-14-1.pdf}
+\#\#\#Part(e) \textbf{Use the \texttt{*} and \texttt{:} symbols to fit
+linear regression models with interaction effects. Do any interactions
+appear to be statistically significant?}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{lm.mpg.multi.ixn }\OtherTok{\textless{}{-}} \FunctionTok{lm}\NormalTok{(mpg }\SpecialCharTok{\textasciitilde{}}\NormalTok{ . }\SpecialCharTok{*}\NormalTok{., }\AttributeTok{data =}\NormalTok{ Auto[, }\SpecialCharTok{{-}}\DecValTok{9}\NormalTok{]) }\CommentTok{\# Using all possible interactions between predictors }
+\FunctionTok{summary}\NormalTok{(lm.mpg.multi.ixn)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## Call:
+## lm(formula = mpg ~ . * ., data = Auto[, -9])
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -7.6303 -1.4481  0.0596  1.2739 11.1386 
+## 
+## Coefficients:
+##                             Estimate Std. Error t value Pr(>|t|)   
+## (Intercept)                3.548e+01  5.314e+01   0.668  0.50475   
+## cylinders                  6.989e+00  8.248e+00   0.847  0.39738   
+## displacement              -4.785e-01  1.894e-01  -2.527  0.01192 * 
+## horsepower                 5.034e-01  3.470e-01   1.451  0.14769   
+## weight                     4.133e-03  1.759e-02   0.235  0.81442   
+## acceleration              -5.859e+00  2.174e+00  -2.696  0.00735 **
+## year                       6.974e-01  6.097e-01   1.144  0.25340   
+## origin                    -2.090e+01  7.097e+00  -2.944  0.00345 **
+## cylinders:displacement    -3.383e-03  6.455e-03  -0.524  0.60051   
+## cylinders:horsepower       1.161e-02  2.420e-02   0.480  0.63157   
+## cylinders:weight           3.575e-04  8.955e-04   0.399  0.69000   
+## cylinders:acceleration     2.779e-01  1.664e-01   1.670  0.09584 . 
+## cylinders:year            -1.741e-01  9.714e-02  -1.793  0.07389 . 
+## cylinders:origin           4.022e-01  4.926e-01   0.816  0.41482   
+## displacement:horsepower   -8.491e-05  2.885e-04  -0.294  0.76867   
+## displacement:weight        2.472e-05  1.470e-05   1.682  0.09342 . 
+## displacement:acceleration -3.479e-03  3.342e-03  -1.041  0.29853   
+## displacement:year          5.934e-03  2.391e-03   2.482  0.01352 * 
+## displacement:origin        2.398e-02  1.947e-02   1.232  0.21875   
+## horsepower:weight         -1.968e-05  2.924e-05  -0.673  0.50124   
+## horsepower:acceleration   -7.213e-03  3.719e-03  -1.939  0.05325 . 
+## horsepower:year           -5.838e-03  3.938e-03  -1.482  0.13916   
+## horsepower:origin          2.233e-03  2.930e-02   0.076  0.93931   
+## weight:acceleration        2.346e-04  2.289e-04   1.025  0.30596   
+## weight:year               -2.245e-04  2.127e-04  -1.056  0.29182   
+## weight:origin             -5.789e-04  1.591e-03  -0.364  0.71623   
+## acceleration:year          5.562e-02  2.558e-02   2.174  0.03033 * 
+## acceleration:origin        4.583e-01  1.567e-01   2.926  0.00365 **
+## year:origin                1.393e-01  7.399e-02   1.882  0.06062 . 
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 2.695 on 363 degrees of freedom
+## Multiple R-squared:  0.8893, Adjusted R-squared:  0.8808 
+## F-statistic: 104.2 on 28 and 363 DF,  p-value: < 2.2e-16
+\end{verbatim}
+
+\hypertarget{comments-2}{%
+\paragraph{Comments}\label{comments-2}}
+
+\begin{itemize}
+\tightlist
+\item
+  F-statistic is 104.2 \textgreater\textgreater{} 1, and associated
+  p-value is \textasciitilde0 so we can continue to reject the null
+  hypothesis that no predictor is associated with the response.
+\item
+  However, p-values for a lot of predictors are now extremely high, so
+  it makes more sense to use the usual threshold of 0.05 for statistical
+  significance.
+\item
+  Based on this threshold, the interactions that are most significant
+  are
+
+  \begin{itemize}
+  \tightlist
+  \item
+    \texttt{acceleration:origin}
+  \item
+    \texttt{cceleration:year}
+  \item
+    \texttt{displacement:year}
+  \end{itemize}
+\end{itemize}
+
+\hypertarget{partf-variable-transformations}{%
+\subsubsection{Part(f) Variable
+Transformations}\label{partf-variable-transformations}}
+
+\textbf{Try a few different transformations of the variables such as
+\(log(X)\), \(\sqrt(X)\), \(X^2\). Report your finding.}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Write a simple function to identify best predictors, as reported on}
+\CommentTok{\# https://rpubs.com/lmorgan95/ISLR\_CH3\_Solutions}
+\NormalTok{best\_predictor }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(dataframe, response) \{}
+  
+  \ControlFlowTok{if}\NormalTok{ (}\FunctionTok{sum}\NormalTok{(}\FunctionTok{sapply}\NormalTok{(dataframe, }\ControlFlowTok{function}\NormalTok{(x) \{}\FunctionTok{is.numeric}\NormalTok{(x) }\SpecialCharTok{|} \FunctionTok{is.factor}\NormalTok{(x)\})) }\SpecialCharTok{\textless{}} \FunctionTok{ncol}\NormalTok{(dataframe)) \{}
+    \FunctionTok{stop}\NormalTok{(}\StringTok{"Make sure that all variables are of class numeric/factor!"}\NormalTok{)}
+\NormalTok{  \}}
+  
+  \CommentTok{\# pre{-}allocate vectors}
+\NormalTok{  varname }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{()}
+\NormalTok{  vartype }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{()}
+\NormalTok{  R2 }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{()}
+\NormalTok{  R2\_log }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{()}
+\NormalTok{  R2\_quad }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{()}
+\NormalTok{  AIC }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{()}
+\NormalTok{  AIC\_log }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{()}
+\NormalTok{  AIC\_quad }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{()}
+\NormalTok{  y }\OtherTok{\textless{}{-}}\NormalTok{ dataframe[ ,response]}
+  
+  \CommentTok{\# \# \# \# \# NUMERIC RESPONSE \# \# \# \# \#}
+  \ControlFlowTok{if}\NormalTok{ (}\FunctionTok{is.numeric}\NormalTok{(y)) \{}
+    \CommentTok{\# Iterate over each column of the dataframe}
+    \ControlFlowTok{for}\NormalTok{ (i }\ControlFlowTok{in} \DecValTok{1}\SpecialCharTok{:}\FunctionTok{ncol}\NormalTok{(dataframe)) \{}
+      \CommentTok{\# Extract the column}
+\NormalTok{      x }\OtherTok{\textless{}{-}}\NormalTok{ dataframe[ ,i]}
+      
+      \CommentTok{\# Extract the column name}
+\NormalTok{      varname[i] }\OtherTok{\textless{}{-}} \FunctionTok{names}\NormalTok{(dataframe)[i]}
+      
+      \CommentTok{\# Define the class of the column}
+      \ControlFlowTok{if}\NormalTok{ (}\FunctionTok{class}\NormalTok{(x) }\SpecialCharTok{\%in\%} \FunctionTok{c}\NormalTok{(}\StringTok{"numeric"}\NormalTok{, }\StringTok{"integer"}\NormalTok{)) \{}
+\NormalTok{        vartype[i] }\OtherTok{\textless{}{-}} \StringTok{"numeric"}
+\NormalTok{      \} }\ControlFlowTok{else}\NormalTok{ \{}
+\NormalTok{        vartype[i] }\OtherTok{\textless{}{-}} \StringTok{"categorical"}
+\NormalTok{      \}}
+      
+      \CommentTok{\# If the column is not the same as the response (why check for this?)}
+      \ControlFlowTok{if}\NormalTok{ (}\SpecialCharTok{!}\FunctionTok{identical}\NormalTok{(y, x)) \{}
+        \CommentTok{\# R{-}squared statistic for the linear: y \textasciitilde{} x}
+\NormalTok{        R2[i] }\OtherTok{\textless{}{-}} \FunctionTok{summary}\NormalTok{(}\FunctionTok{lm}\NormalTok{(y }\SpecialCharTok{\textasciitilde{}}\NormalTok{ x))}\SpecialCharTok{$}\NormalTok{r.squared }
+        
+        \CommentTok{\# R{-}squared statistic for the log{-}transformation: y \textasciitilde{} log(x)}
+        \ControlFlowTok{if}\NormalTok{ (}\FunctionTok{is.numeric}\NormalTok{(x)) \{ }
+          \CommentTok{\# if y \textasciitilde{} log(x) for min(x) \textless{}= 0, do y \textasciitilde{} log(x + abs(min(x)) + 1)}
+          \ControlFlowTok{if}\NormalTok{ (}\FunctionTok{min}\NormalTok{(x) }\SpecialCharTok{\textless{}=} \DecValTok{0}\NormalTok{) \{ }
+\NormalTok{            R2\_log[i] }\OtherTok{\textless{}{-}} \FunctionTok{summary}\NormalTok{(}\FunctionTok{lm}\NormalTok{(y }\SpecialCharTok{\textasciitilde{}} \FunctionTok{log}\NormalTok{(x }\SpecialCharTok{+} \FunctionTok{abs}\NormalTok{(}\FunctionTok{min}\NormalTok{(x)) }\SpecialCharTok{+} \DecValTok{1}\NormalTok{)))}\SpecialCharTok{$}\NormalTok{r.squared}
+\NormalTok{          \} }\ControlFlowTok{else}\NormalTok{ \{}
+\NormalTok{            R2\_log[i] }\OtherTok{\textless{}{-}} \FunctionTok{summary}\NormalTok{(}\FunctionTok{lm}\NormalTok{(y }\SpecialCharTok{\textasciitilde{}} \FunctionTok{log}\NormalTok{(x)))}\SpecialCharTok{$}\NormalTok{r.squared}
+\NormalTok{          \}}
+\NormalTok{        \} }\ControlFlowTok{else}\NormalTok{ \{}
+          \CommentTok{\# Don\textquotesingle{}t need to do anything for categorical variables}
+\NormalTok{          R2\_log[i] }\OtherTok{\textless{}{-}} \ConstantTok{NA}
+\NormalTok{        \}}
+        
+        \CommentTok{\# R{-}squared statistic for the quadratic transformation: y \textasciitilde{} x + x\^{}2}
+        \ControlFlowTok{if}\NormalTok{ (}\FunctionTok{is.numeric}\NormalTok{(x)) \{ }
+\NormalTok{          R2\_quad[i] }\OtherTok{\textless{}{-}} \FunctionTok{summary}\NormalTok{(}\FunctionTok{lm}\NormalTok{(y }\SpecialCharTok{\textasciitilde{}}\NormalTok{ x }\SpecialCharTok{+} \FunctionTok{I}\NormalTok{(x}\SpecialCharTok{\^{}}\DecValTok{2}\NormalTok{)))}\SpecialCharTok{$}\NormalTok{r.squared}
+\NormalTok{        \} }\ControlFlowTok{else}\NormalTok{ \{}
+\NormalTok{          R2\_quad[i] }\OtherTok{\textless{}{-}} \ConstantTok{NA}
+\NormalTok{        \}}
+        
+\NormalTok{      \} }\ControlFlowTok{else}\NormalTok{ \{}
+        \CommentTok{\# If the target and the predictor columns are identical, then populate with NAs}
+\NormalTok{        R2[i] }\OtherTok{\textless{}{-}} \ConstantTok{NA}
+\NormalTok{        R2\_log[i] }\OtherTok{\textless{}{-}} \ConstantTok{NA}
+\NormalTok{        R2\_quad[i] }\OtherTok{\textless{}{-}} \ConstantTok{NA}
+\NormalTok{      \}}
+\NormalTok{    \}}
+    
+    \FunctionTok{print}\NormalTok{(}\FunctionTok{paste}\NormalTok{(}\StringTok{"Response variable:"}\NormalTok{, response))}
+    
+    \FunctionTok{data.frame}\NormalTok{(varname, }
+\NormalTok{               vartype, }
+               \AttributeTok{R2 =} \FunctionTok{round}\NormalTok{(R2, }\DecValTok{3}\NormalTok{), }
+               \AttributeTok{R2\_log =} \FunctionTok{round}\NormalTok{(R2\_log, }\DecValTok{3}\NormalTok{), }
+               \AttributeTok{R2\_quad =} \FunctionTok{round}\NormalTok{(R2\_quad, }\DecValTok{3}\NormalTok{)) }\SpecialCharTok{\%\textgreater{}\%}
+      \FunctionTok{mutate}\NormalTok{(}\AttributeTok{max\_R2 =} \FunctionTok{pmax}\NormalTok{(R2, R2\_log, R2\_quad, }\AttributeTok{na.rm =}\NormalTok{ T)) }\SpecialCharTok{\%\textgreater{}\%}
+      \FunctionTok{arrange}\NormalTok{(}\FunctionTok{desc}\NormalTok{(max\_R2))}
+    
+    
+    \CommentTok{\# \# \# \# \# CATEGORICAL RESPONSE \# \# \# \# \#}
+\NormalTok{  \} }\ControlFlowTok{else}\NormalTok{ \{}
+    
+    \ControlFlowTok{for}\NormalTok{ (i }\ControlFlowTok{in} \DecValTok{1}\SpecialCharTok{:}\FunctionTok{ncol}\NormalTok{(dataframe)) \{}
+      \CommentTok{\# As before,iterate over all columns in the dataframe and extract each column one{-}by{-}one}
+\NormalTok{      x }\OtherTok{\textless{}{-}}\NormalTok{ dataframe[ ,i]}
+\NormalTok{      varname[i] }\OtherTok{\textless{}{-}} \FunctionTok{names}\NormalTok{(dataframe)[i]}
+      
+      \CommentTok{\# Populate class as ebefore}
+      \ControlFlowTok{if}\NormalTok{ (}\FunctionTok{class}\NormalTok{(x) }\SpecialCharTok{\%in\%} \FunctionTok{c}\NormalTok{(}\StringTok{"numeric"}\NormalTok{, }\StringTok{"integer"}\NormalTok{)) \{}
+\NormalTok{        vartype[i] }\OtherTok{\textless{}{-}} \StringTok{"numeric"}
+\NormalTok{      \} }\ControlFlowTok{else}\NormalTok{ \{}
+\NormalTok{        vartype[i] }\OtherTok{\textless{}{-}} \StringTok{"categorical"}
+\NormalTok{      \}}
+      
+      \CommentTok{\# For all columns except the response}
+      \ControlFlowTok{if}\NormalTok{ (}\SpecialCharTok{!}\FunctionTok{identical}\NormalTok{(y, x)) \{}
+        
+        \CommentTok{\# Get the Akaike Information Criterion for the linear model: y \textasciitilde{} x}
+        \CommentTok{\# AIC is derived using a generalized linear model}
+\NormalTok{        AIC[i] }\OtherTok{\textless{}{-}} \FunctionTok{summary}\NormalTok{(}\FunctionTok{glm}\NormalTok{(y }\SpecialCharTok{\textasciitilde{}}\NormalTok{ x, }\AttributeTok{family =} \StringTok{"binomial"}\NormalTok{))}\SpecialCharTok{$}\NormalTok{aic }
+        
+        \CommentTok{\# Get the Akaike Information Criterion for the log{-}transform: y \textasciitilde{} log(x)}
+        \ControlFlowTok{if}\NormalTok{ (}\FunctionTok{is.numeric}\NormalTok{(x)) \{ }
+          \ControlFlowTok{if}\NormalTok{ (}\FunctionTok{min}\NormalTok{(x) }\SpecialCharTok{\textless{}=} \DecValTok{0}\NormalTok{) \{ }\CommentTok{\# if y \textasciitilde{} log(x) for min(x) \textless{}= 0, do y \textasciitilde{} log(x + abs(min(x)) + 1)}
+\NormalTok{            AIC\_log[i] }\OtherTok{\textless{}{-}} \FunctionTok{summary}\NormalTok{(}\FunctionTok{glm}\NormalTok{(y }\SpecialCharTok{\textasciitilde{}} \FunctionTok{log}\NormalTok{(x }\SpecialCharTok{+} \FunctionTok{abs}\NormalTok{(}\FunctionTok{min}\NormalTok{(x)) }\SpecialCharTok{+} \DecValTok{1}\NormalTok{), }\AttributeTok{family =} \StringTok{"binomial"}\NormalTok{))}\SpecialCharTok{$}\NormalTok{aic}
+\NormalTok{          \} }\ControlFlowTok{else}\NormalTok{ \{}
+\NormalTok{            AIC\_log[i] }\OtherTok{\textless{}{-}} \FunctionTok{summary}\NormalTok{(}\FunctionTok{glm}\NormalTok{(y }\SpecialCharTok{\textasciitilde{}} \FunctionTok{log}\NormalTok{(x), }\AttributeTok{family =} \StringTok{"binomial"}\NormalTok{))}\SpecialCharTok{$}\NormalTok{aic}
+\NormalTok{          \}}
+\NormalTok{        \} }\ControlFlowTok{else}\NormalTok{ \{}
+\NormalTok{          AIC\_log[i] }\OtherTok{\textless{}{-}} \ConstantTok{NA}
+\NormalTok{        \}}
+        
+        \CommentTok{\# Get the Akaike Information Criteration for the quadratic transformatio : y \textasciitilde{} x + x\^{}2}
+        \ControlFlowTok{if}\NormalTok{ (}\FunctionTok{is.numeric}\NormalTok{(x)) \{ }
+\NormalTok{          AIC\_quad[i] }\OtherTok{\textless{}{-}} \FunctionTok{summary}\NormalTok{(}\FunctionTok{glm}\NormalTok{(y }\SpecialCharTok{\textasciitilde{}}\NormalTok{ x }\SpecialCharTok{+} \FunctionTok{I}\NormalTok{(x}\SpecialCharTok{\^{}}\DecValTok{2}\NormalTok{), }\AttributeTok{family =} \StringTok{"binomial"}\NormalTok{))}\SpecialCharTok{$}\NormalTok{aic}
+\NormalTok{        \} }\ControlFlowTok{else}\NormalTok{ \{}
+\NormalTok{          AIC\_quad[i] }\OtherTok{\textless{}{-}} \ConstantTok{NA}
+\NormalTok{        \}}
+        
+\NormalTok{      \} }\ControlFlowTok{else}\NormalTok{ \{}
+\NormalTok{        AIC[i] }\OtherTok{\textless{}{-}} \ConstantTok{NA}
+\NormalTok{        AIC\_log[i] }\OtherTok{\textless{}{-}} \ConstantTok{NA}
+\NormalTok{        AIC\_quad[i] }\OtherTok{\textless{}{-}} \ConstantTok{NA}
+\NormalTok{      \}}
+\NormalTok{    \}}
+    
+    \FunctionTok{print}\NormalTok{(}\FunctionTok{paste}\NormalTok{(}\StringTok{"Response variable:"}\NormalTok{, response))}
+    
+    \FunctionTok{data.frame}\NormalTok{(varname, }
+\NormalTok{               vartype, }
+               \AttributeTok{AIC =} \FunctionTok{round}\NormalTok{(AIC, }\DecValTok{3}\NormalTok{), }
+               \AttributeTok{AIC\_log =} \FunctionTok{round}\NormalTok{(AIC\_log, }\DecValTok{3}\NormalTok{), }
+               \AttributeTok{AIC\_quad =} \FunctionTok{round}\NormalTok{(AIC\_quad, }\DecValTok{3}\NormalTok{)) }\SpecialCharTok{\%\textgreater{}\%}
+      \FunctionTok{mutate}\NormalTok{(}\AttributeTok{min\_AIC =} \FunctionTok{pmin}\NormalTok{(AIC, AIC\_log, AIC\_quad, }\AttributeTok{na.rm =}\NormalTok{ T)) }\SpecialCharTok{\%\textgreater{}\%}
+      \FunctionTok{arrange}\NormalTok{(min\_AIC)}
+\NormalTok{  \} }
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+Running the \texttt{best\_predictor} function over the entire dataset
+yields these results.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{best\_predictor}\NormalTok{(Auto[, }\SpecialCharTok{{-}}\DecValTok{9}\NormalTok{], }\StringTok{"mpg"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] "Response variable: mpg"
+\end{verbatim}
+
+\begin{verbatim}
+##        varname vartype    R2 R2_log R2_quad max_R2
+## 1       weight numeric 0.693  0.713   0.715  0.715
+## 2 displacement numeric 0.648  0.686   0.689  0.689
+## 3   horsepower numeric 0.606  0.668   0.688  0.688
+## 4    cylinders numeric 0.605  0.603   0.607  0.607
+## 5         year numeric 0.337  0.332   0.368  0.368
+## 6       origin numeric 0.319  0.330   0.332  0.332
+## 7 acceleration numeric 0.179  0.190   0.194  0.194
+## 8          mpg numeric    NA     NA      NA     NA
+\end{verbatim}
+
+Visualizing the feature importances of the raw features along with their
+log-transformed and quadratic versions.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Get the R2 statistic for raw feature, as well as log transformed and quadratic transformed versions}
+\NormalTok{mpg\_predictors }\OtherTok{\textless{}{-}} \FunctionTok{best\_predictor}\NormalTok{(Auto[, }\SpecialCharTok{{-}}\DecValTok{9}\NormalTok{], }\StringTok{"mpg"}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%} 
+\NormalTok{  dplyr}\SpecialCharTok{::}\FunctionTok{select}\NormalTok{(}\SpecialCharTok{{-}}\FunctionTok{c}\NormalTok{(vartype, max\_R2)) }\SpecialCharTok{\%\textgreater{}\%}                   
+\NormalTok{  tidyr}\SpecialCharTok{::}\FunctionTok{gather}\NormalTok{(}\AttributeTok{key =} \StringTok{"key"}\NormalTok{, }\AttributeTok{value =} \StringTok{"R2"}\NormalTok{, }\SpecialCharTok{{-}}\NormalTok{varname) }\SpecialCharTok{\%\textgreater{}\%} 
+\NormalTok{  dplyr}\SpecialCharTok{::}\FunctionTok{filter}\NormalTok{(}\SpecialCharTok{!}\FunctionTok{is.na}\NormalTok{(R2))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] "Response variable: mpg"
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Map each feature to a level based on their max R2}
+\NormalTok{mpg\_predictors\_order }\OtherTok{\textless{}{-}} \FunctionTok{best\_predictor}\NormalTok{(Auto[, }\SpecialCharTok{{-}}\DecValTok{9}\NormalTok{], }\StringTok{"mpg"}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%} 
+\NormalTok{  dplyr}\SpecialCharTok{::}\FunctionTok{select}\NormalTok{(varname, max\_R2) }\SpecialCharTok{\%\textgreater{}\%} 
+\NormalTok{  dplyr}\SpecialCharTok{::}\FunctionTok{filter}\NormalTok{(}\SpecialCharTok{!}\FunctionTok{is.na}\NormalTok{(max\_R2)) }\SpecialCharTok{\%\textgreater{}\%} 
+\NormalTok{  dplyr}\SpecialCharTok{::}\FunctionTok{arrange}\NormalTok{(}\FunctionTok{desc}\NormalTok{(max\_R2)) }\SpecialCharTok{\%\textgreater{}\%} 
+\NormalTok{  dplyr}\SpecialCharTok{::}\FunctionTok{pull}\NormalTok{(varname)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] "Response variable: mpg"
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Make the varname in the features df a factor}
+\NormalTok{mpg\_predictors[[}\StringTok{\textquotesingle{}varname\textquotesingle{}}\NormalTok{]] }\OtherTok{\textless{}{-}} \FunctionTok{factor}\NormalTok{(mpg\_predictors}\SpecialCharTok{$}\NormalTok{varname, }\AttributeTok{ordered =}\NormalTok{ T, }\AttributeTok{levels =}\NormalTok{ mpg\_predictors\_order)}
+
+\FunctionTok{ggplot}\NormalTok{(mpg\_predictors, }\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ R2, }\AttributeTok{y =}\NormalTok{ varname, }\AttributeTok{col =}\NormalTok{ key, }\AttributeTok{group =}\NormalTok{ varname)) }\SpecialCharTok{+}
+  \FunctionTok{geom\_line}\NormalTok{(}\AttributeTok{col =} \StringTok{\textquotesingle{}grey15\textquotesingle{}}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{geom\_point}\NormalTok{(}\AttributeTok{size =} \DecValTok{2}\NormalTok{) }\SpecialCharTok{+} 
+  \FunctionTok{theme\_light}\NormalTok{() }\SpecialCharTok{+}
+  \FunctionTok{theme}\NormalTok{(}\AttributeTok{legend.position =} \StringTok{\textquotesingle{}bottom\textquotesingle{}}\NormalTok{) }\SpecialCharTok{+} 
+  \FunctionTok{labs}\NormalTok{(}\AttributeTok{title =} \StringTok{"Best Predictors (\& Transformations) for mpg"}\NormalTok{, }
+       \AttributeTok{col =} \StringTok{"Predictor Transformation"}\NormalTok{, }
+       \AttributeTok{y =} \StringTok{"Predictor"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{02_lab_rmd_files/figure-latex/unnamed-chunk-18-1.pdf}
+Based on these R\^{}2 variables, we may want to use quadratic
+transformatins onf \texttt{displacement}, \texttt{weight},
+\texttt{year}, and \texttt{horspepower}.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{lm.mpg.multi.quad }\OtherTok{\textless{}{-}} \FunctionTok{lm}\NormalTok{(mpg }\SpecialCharTok{\textasciitilde{}}\NormalTok{ . }\SpecialCharTok{{-}}\NormalTok{ name }\SpecialCharTok{+} \FunctionTok{I}\NormalTok{(weight}\SpecialCharTok{\^{}}\DecValTok{2}\NormalTok{) }\SpecialCharTok{+} \FunctionTok{I}\NormalTok{(displacement}\SpecialCharTok{\^{}}\DecValTok{2}\NormalTok{) }\SpecialCharTok{+} \FunctionTok{I}\NormalTok{(horsepower}\SpecialCharTok{\^{}}\DecValTok{2}\NormalTok{) }\SpecialCharTok{+} \FunctionTok{I}\NormalTok{(year}\SpecialCharTok{\^{}}\DecValTok{2}\NormalTok{), }\AttributeTok{data =}\NormalTok{ Auto) }
+\FunctionTok{summary}\NormalTok{(lm.mpg.multi.quad)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## Call:
+## lm(formula = mpg ~ . - name + I(weight^2) + I(displacement^2) + 
+##     I(horsepower^2) + I(year^2), data = Auto)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -8.8607 -1.4222  0.0293  1.3596 11.7816 
+## 
+## Coefficients:
+##                     Estimate Std. Error t value Pr(>|t|)    
+## (Intercept)        4.121e+02  6.969e+01   5.912 7.51e-09 ***
+## cylinders          5.892e-01  3.154e-01   1.868 0.062514 .  
+## displacement      -4.415e-02  1.929e-02  -2.289 0.022606 *  
+## horsepower        -1.861e-01  3.928e-02  -4.737 3.06e-06 ***
+## weight            -9.982e-03  2.485e-03  -4.016 7.13e-05 ***
+## acceleration      -1.837e-01  9.631e-02  -1.907 0.057279 .  
+## year              -1.003e+01  1.838e+00  -5.455 8.86e-08 ***
+## origin             5.900e-01  2.558e-01   2.307 0.021594 *  
+## I(weight^2)        1.052e-06  3.344e-07   3.146 0.001784 ** 
+## I(displacement^2)  7.243e-05  3.324e-05   2.179 0.029954 *  
+## I(horsepower^2)    4.604e-04  1.331e-04   3.458 0.000605 ***
+## I(year^2)          7.090e-02  1.207e-02   5.875 9.25e-09 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 2.782 on 380 degrees of freedom
+## Multiple R-squared:  0.8765, Adjusted R-squared:  0.873 
+## F-statistic: 245.3 on 11 and 380 DF,  p-value: < 2.2e-16
+\end{verbatim}
+
+This improves the adjusted R\^{}2 quite significantly from
+\textasciitilde80\% to 87.3\%. However, there is still evidence of
+non-linearity in residuals i.e.~a fan shape in the standardized
+residuals and the deviation from the diagonal in the quantile-quantile
+plot.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{par}\NormalTok{(}\AttributeTok{mfrow =} \FunctionTok{c}\NormalTok{(}\DecValTok{2}\NormalTok{, }\DecValTok{2}\NormalTok{))}
+\FunctionTok{plot}\NormalTok{(lm.mpg.multi.quad)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{02_lab_rmd_files/figure-latex/unnamed-chunk-20-1.pdf}
+Trying to resolve this with a log transform of the response.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{lm.mpg.multi.log }\OtherTok{\textless{}{-}} \FunctionTok{lm}\NormalTok{(}\FunctionTok{log}\NormalTok{(mpg) }\SpecialCharTok{\textasciitilde{}}\NormalTok{ . }\SpecialCharTok{{-}}\NormalTok{ name, }\AttributeTok{data =}\NormalTok{ Auto)}
+\FunctionTok{summary}\NormalTok{(lm.mpg.multi.log)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## Call:
+## lm(formula = log(mpg) ~ . - name, data = Auto)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -0.40955 -0.06533  0.00079  0.06785  0.33925 
+## 
+## Coefficients:
+##                Estimate Std. Error t value Pr(>|t|)    
+## (Intercept)   1.751e+00  1.662e-01  10.533  < 2e-16 ***
+## cylinders    -2.795e-02  1.157e-02  -2.415  0.01619 *  
+## displacement  6.362e-04  2.690e-04   2.365  0.01852 *  
+## horsepower   -1.475e-03  4.935e-04  -2.989  0.00298 ** 
+## weight       -2.551e-04  2.334e-05 -10.931  < 2e-16 ***
+## acceleration -1.348e-03  3.538e-03  -0.381  0.70339    
+## year          2.958e-02  1.824e-03  16.211  < 2e-16 ***
+## origin        4.071e-02  9.955e-03   4.089 5.28e-05 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 0.1191 on 384 degrees of freedom
+## Multiple R-squared:  0.8795, Adjusted R-squared:  0.8773 
+## F-statistic: 400.4 on 7 and 384 DF,  p-value: < 2.2e-16
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{par}\NormalTok{(}\AttributeTok{mfrow =} \FunctionTok{c}\NormalTok{(}\DecValTok{2}\NormalTok{, }\DecValTok{2}\NormalTok{))}
+\FunctionTok{plot}\NormalTok{(lm.mpg.multi.log)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{02_lab_rmd_files/figure-latex/unnamed-chunk-21-1.pdf}
+
+Final model makes the following changes - log transform the response -
+use quadratic predictors for features that are related non-linearly to
+\texttt{log(mpg)} - use the most significant interaction terms - use a
+\texttt{brand} variable from the name of the vehicle
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{Auto\_2 }\OtherTok{\textless{}{-}}\NormalTok{ Auto }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{mutate}\NormalTok{(}\AttributeTok{mpg =} \FunctionTok{log}\NormalTok{(mpg)) }
+
+\CommentTok{\# Extract the first item from each list element}
+\NormalTok{Auto\_2}\SpecialCharTok{$}\NormalTok{brand }\OtherTok{\textless{}{-}} \FunctionTok{sapply}\NormalTok{(}\FunctionTok{strsplit}\NormalTok{(}\FunctionTok{as.character}\NormalTok{(Auto\_2}\SpecialCharTok{$}\NormalTok{name), }\AttributeTok{split  =} \StringTok{" "}\NormalTok{), }\ControlFlowTok{function}\NormalTok{ (x)\{x[}\DecValTok{1}\NormalTok{]\})}
+
+\CommentTok{\# Fixing typos}
+\NormalTok{Auto\_2}\SpecialCharTok{$}\NormalTok{brand }\OtherTok{\textless{}{-}} \FunctionTok{factor}\NormalTok{(}\FunctionTok{ifelse}\NormalTok{(Auto\_2}\SpecialCharTok{$}\NormalTok{brand }\SpecialCharTok{\%in\%} \FunctionTok{c}\NormalTok{(}\StringTok{"vokswagen"}\NormalTok{, }\StringTok{"vw"}\NormalTok{), }\StringTok{"volkswagen"}\NormalTok{, }
+                            \FunctionTok{ifelse}\NormalTok{(Auto\_2}\SpecialCharTok{$}\NormalTok{brand }\SpecialCharTok{==} \StringTok{"toyouta"}\NormalTok{, }\StringTok{"toyota"}\NormalTok{, }
+                                   \FunctionTok{ifelse}\NormalTok{(Auto\_2}\SpecialCharTok{$}\NormalTok{brand }\SpecialCharTok{\%in\%} \FunctionTok{c}\NormalTok{(}\StringTok{"chevroelt"}\NormalTok{, }\StringTok{"chevy"}\NormalTok{), }\StringTok{"chevrolet"}\NormalTok{, }
+                                          \FunctionTok{ifelse}\NormalTok{(Auto\_2}\SpecialCharTok{$}\NormalTok{brand }\SpecialCharTok{==} \StringTok{"maxda"}\NormalTok{, }\StringTok{"mazda"}\NormalTok{, }
+\NormalTok{                                                 Auto\_2}\SpecialCharTok{$}\NormalTok{brand)))))}
+\CommentTok{\# Collapse into 10 categories}
+\NormalTok{Auto\_2}\SpecialCharTok{$}\NormalTok{brand }\OtherTok{\textless{}{-}}\NormalTok{ forcats}\SpecialCharTok{::}\FunctionTok{fct\_lump}\NormalTok{(Auto\_2}\SpecialCharTok{$}\NormalTok{brand, }\AttributeTok{n =} \DecValTok{9}\NormalTok{, }\AttributeTok{other\_level =} \StringTok{"uncommon"}\NormalTok{)}
+
+\CommentTok{\# Don\textquotesingle{}t need the name feature if we\textquotesingle{}re using brand}
+\NormalTok{Auto\_2}\SpecialCharTok{$}\NormalTok{name }\OtherTok{\textless{}{-}} \ConstantTok{NULL}
+
+\CommentTok{\# Fit the model with the best interactions and transfrmations }
+\NormalTok{lm.mpg.final }\OtherTok{\textless{}{-}} \FunctionTok{lm}\NormalTok{(mpg }\SpecialCharTok{\textasciitilde{}}\NormalTok{ . }\SpecialCharTok{+} \FunctionTok{I}\NormalTok{(horsepower}\SpecialCharTok{\^{}}\DecValTok{2}\NormalTok{) }\SpecialCharTok{+} \FunctionTok{I}\NormalTok{(year}\SpecialCharTok{\^{}}\DecValTok{2}\NormalTok{) }\SpecialCharTok{+}\NormalTok{ acceleration}\SpecialCharTok{:}\NormalTok{year }\SpecialCharTok{+}\NormalTok{ acceleration}\SpecialCharTok{:}\NormalTok{origin, }\AttributeTok{data =}\NormalTok{ Auto\_2)}
+
+\FunctionTok{summary}\NormalTok{(lm.mpg.final)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## Call:
+## lm(formula = mpg ~ . + I(horsepower^2) + I(year^2) + acceleration:year + 
+##     acceleration:origin, data = Auto_2)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -0.37893 -0.05907 -0.00022  0.05997  0.34458 
+## 
+## Coefficients:
+##                       Estimate Std. Error t value Pr(>|t|)    
+## (Intercept)          1.504e+01  2.651e+00   5.671 2.86e-08 ***
+## cylinders           -6.190e-03  1.109e-02  -0.558 0.577147    
+## displacement        -2.793e-04  2.723e-04  -1.026 0.305691    
+## horsepower          -7.975e-03  1.343e-03  -5.937 6.69e-09 ***
+## weight              -1.392e-04  2.537e-05  -5.487 7.60e-08 ***
+## acceleration        -1.709e-01  4.509e-02  -3.790 0.000176 ***
+## year                -2.726e-01  7.080e-02  -3.851 0.000139 ***
+## origin              -1.898e-01  5.847e-02  -3.246 0.001276 ** 
+## brandbuick           6.736e-02  3.375e-02   1.996 0.046691 *  
+## brandchevrolet       3.399e-02  2.585e-02   1.315 0.189367    
+## branddatsun          1.802e-01  3.959e-02   4.551 7.23e-06 ***
+## branddodge           5.784e-02  2.957e-02   1.956 0.051239 .  
+## brandford           -5.201e-03  2.592e-02  -0.201 0.841093    
+## brandplymouth        6.287e-02  2.854e-02   2.203 0.028228 *  
+## brandtoyota          1.039e-01  3.863e-02   2.691 0.007454 ** 
+## brandvolkswagen      7.267e-02  3.448e-02   2.108 0.035729 *  
+## branduncommon        8.069e-02  2.589e-02   3.117 0.001971 ** 
+## I(horsepower^2)      1.752e-05  4.231e-06   4.141 4.29e-05 ***
+## I(year^2)            1.788e-03  4.789e-04   3.733 0.000219 ***
+## acceleration:year    1.828e-03  5.963e-04   3.065 0.002335 ** 
+## acceleration:origin  1.116e-02  3.488e-03   3.201 0.001490 ** 
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 0.1051 on 371 degrees of freedom
+## Multiple R-squared:  0.9093, Adjusted R-squared:  0.9044 
+## F-statistic:   186 on 20 and 371 DF,  p-value: < 2.2e-16
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{par}\NormalTok{(}\AttributeTok{mfrow =} \FunctionTok{c}\NormalTok{(}\DecValTok{2}\NormalTok{, }\DecValTok{2}\NormalTok{))}
+\FunctionTok{plot}\NormalTok{(lm.mpg.final)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{02_lab_rmd_files/figure-latex/unnamed-chunk-23-1.pdf}
+\#\# Exercise 10: Carseats (Multiple Linear Regression) \textbf{This
+question should be answered using the \texttt{Carseats} data set.}
+
+\hypertarget{parta-2}{%
+\subsubsection{Part(a)}\label{parta-2}}
+
+\textbf{Fit a multiple regression model to predict \texttt{Sales} using
+\texttt{Price}, \texttt{Urban}, and \texttt{US}.}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{lm.sales }\OtherTok{\textless{}{-}} \FunctionTok{lm}\NormalTok{(Sales }\SpecialCharTok{\textasciitilde{}}\NormalTok{ Price }\SpecialCharTok{+}\NormalTok{ Urban }\SpecialCharTok{+}\NormalTok{ US, }\AttributeTok{data =}\NormalTok{ Carseats)}
+\FunctionTok{summary}\NormalTok{(lm.sales)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## Call:
+## lm(formula = Sales ~ Price + Urban + US, data = Carseats)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -6.9206 -1.6220 -0.0564  1.5786  7.0581 
+## 
+## Coefficients:
+##              Estimate Std. Error t value Pr(>|t|)    
+## (Intercept) 13.043469   0.651012  20.036  < 2e-16 ***
+## Price       -0.054459   0.005242 -10.389  < 2e-16 ***
+## UrbanYes    -0.021916   0.271650  -0.081    0.936    
+## USYes        1.200573   0.259042   4.635 4.86e-06 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 2.472 on 396 degrees of freedom
+## Multiple R-squared:  0.2393, Adjusted R-squared:  0.2335 
+## F-statistic: 41.52 on 3 and 396 DF,  p-value: < 2.2e-16
+\end{verbatim}
+
+\hypertarget{partb-1}{%
+\subsubsection{Part(b)}\label{partb-1}}
+
+\textbf{Provide an interpretation of each coefficient in the model.} -
+\textbf{Intercept} (13.04): The baseline Sale price is 13. That is,
+assuming a constant price and assuming the sale was made for a store
+outside the US and in a non-Urban area, the average sale price was
+13.04. - \textbf{Price}: (-0.05445): A one unit increase in price
+results in a decrease of 54 units of sales across all markets. -
+\textbf{UrbanYes}: (-0.0219): If the store is located in an Urban
+location, then there are, on average, 22 fewer sales expected. However,
+since the p-value associated with this effect is high, there is no
+statistical significance of this effect. - \textbf{USYes}: (1.200):
+Quantifies the increase in sales if a store is located in the US. If a
+store is located in the US, then the store is expected to have 1200
+additional sales.
+
+\hypertarget{partc-1}{%
+\subsubsection{Part(c)}\label{partc-1}}
+
+\textbf{Write out the model in equation form.} \[
+\hat{Sales} = 13.0434 - 0.054459 \times Price -0.021916 \times Urban + 1.200573 \times US
+\] Where - \(US\) = 1 if the store is in he US, 0 otherwise - \(Urban\)
+= 1 if the store is in an urban location, 0 otherwise
+
+\hypertarget{partd}{%
+\subsubsection{Part(d)}\label{partd}}
+
+\textbf{For which of the predictors can you reject the null hypothesi
+\(H_0 = \beta_j = 0\)?} - We can reject the null hypothesis for the
+\texttt{Price} and \texttt{US} predictors because their p-values are
+quite small. - We cannot reject the null hypothesis for the
+\texttt{Urban} predictor because there does not seem to be a
+statistically significant relationship between this variable and the
+response.
+
+\hypertarget{parte}{%
+\subsubsection{Part(e)}\label{parte}}
+
+\textbf{On the basis of your response to the previous question, fit a
+smaller model that only uses the predictors for which there is evidence
+of association with the outcome.}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{lm.sales.smaller }\OtherTok{\textless{}{-}} \FunctionTok{lm}\NormalTok{(Sales }\SpecialCharTok{\textasciitilde{}}\NormalTok{ Price }\SpecialCharTok{+}\NormalTok{ US, }\AttributeTok{data =}\NormalTok{ Carseats)}
+\FunctionTok{summary}\NormalTok{(lm.sales.smaller)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## Call:
+## lm(formula = Sales ~ Price + US, data = Carseats)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -6.9269 -1.6286 -0.0574  1.5766  7.0515 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(>|t|)    
+## (Intercept) 13.03079    0.63098  20.652  < 2e-16 ***
+## Price       -0.05448    0.00523 -10.416  < 2e-16 ***
+## USYes        1.19964    0.25846   4.641 4.71e-06 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 2.469 on 397 degrees of freedom
+## Multiple R-squared:  0.2393, Adjusted R-squared:  0.2354 
+## F-statistic: 62.43 on 2 and 397 DF,  p-value: < 2.2e-16
+\end{verbatim}
+
+\hypertarget{partf}{%
+\subsubsection{Part(f)}\label{partf}}
+
+\textbf{How well do the models in (a) and (e) fit the data?} - Model
+(a): \texttt{lm.sales} - has an adjusted R-squared statistic of 0.2335,
+RSE of 2.472 - Model (b): \texttt{lm.sales.smaller} - has an adjusted
+R-squared statistic of 0.2354, RSE of 2.469
+
+The reason \texttt{a} has a higher RSE than \texttt{e} because the
+adjusted R\^{}2 statistic is dependent on minimizing
+\(\frac{RSS}{n - p - 1}\). Here, the number increase in the denominator
+is not offset by the decrease in the RSS (numerator). RSS will always
+decrease with the addition of a new variable, but adjusted \(R^2\) does
+not.
+
+\hypertarget{part-g}{%
+\subsubsection{Part (g)}\label{part-g}}
+
+\textbf{Using the model from (e), obtain the 95\% confidence intervals
+for the coefficients.}.
+
+The 95\% confidence interval for all coefficients are defined as follows
+\[
+\hat\beta_i + t_{n - 2}(0.975) \times \hat{SE(\beta_i)}
+\] I.e. the mean + standard error scaled by the t-statistic interval
+corresponding to 97.5\% probability with \texttt{n} - 2 degrees of
+freedom, \texttt{n} being the number of data points.
+
+In R, this is computed as follows:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{confint}\NormalTok{(lm.sales.smaller, }\AttributeTok{level =} \FloatTok{0.95}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##                   2.5 %      97.5 %
+## (Intercept) 11.79032020 14.27126531
+## Price       -0.06475984 -0.04419543
+## USYes        0.69151957  1.70776632
+\end{verbatim}
+
+\hypertarget{part-h}{%
+\subsubsection{Part (h)}\label{part-h}}
+
+\textbf{Is there evidence of outliers or high leverage observations in
+the model from (e)?}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{par}\NormalTok{(}\AttributeTok{mfrow =} \FunctionTok{c}\NormalTok{(}\DecValTok{2}\NormalTok{, }\DecValTok{2}\NormalTok{))}
+\FunctionTok{plot}\NormalTok{(lm.sales.smaller)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{02_lab_rmd_files/figure-latex/unnamed-chunk-27-1.pdf}
+The initial diagnostic plot shows there are many data points beyond
+Cooks distance n the \texttt{Residuals\ vs\ Leverage} plot.
+
+Exploring these in more detal.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Leverage statistic is always equal to (p + 1) / n, so we can identify points with high leverage using this threshold}
+\CommentTok{\# hatvaluse gets the leverage for each data point}
+\FunctionTok{round}\NormalTok{(((}\DecValTok{2} \SpecialCharTok{+} \DecValTok{1}\NormalTok{) }\SpecialCharTok{/} \FunctionTok{nrow}\NormalTok{(Carseats)), }\DecValTok{10}\NormalTok{) }\SpecialCharTok{==} \FunctionTok{round}\NormalTok{(}\FunctionTok{mean}\NormalTok{(}\FunctionTok{hatvalues}\NormalTok{(lm.sales.smaller)), }\DecValTok{10}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] TRUE
+\end{verbatim}
+
+Identify any potential outliers as data points whose standardized
+residual is outside {[}-2, 2{]}.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{broom}\SpecialCharTok{::}\FunctionTok{augment}\NormalTok{(lm.sales.smaller) }\SpecialCharTok{\%\textgreater{}\%} 
+\NormalTok{  dplyr}\SpecialCharTok{::}\FunctionTok{select}\NormalTok{(.hat, .std.resid) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{ggplot}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ .hat, }\AttributeTok{y =}\NormalTok{ .std.resid)) }\SpecialCharTok{+} 
+  \FunctionTok{geom\_point}\NormalTok{() }\SpecialCharTok{+}
+  \FunctionTok{geom\_hline}\NormalTok{(}\AttributeTok{yintercept =} \SpecialCharTok{{-}}\DecValTok{2}\NormalTok{, }\AttributeTok{size =} \DecValTok{1}\NormalTok{, }\AttributeTok{color =} \StringTok{\textquotesingle{}red\textquotesingle{}}\NormalTok{) }\SpecialCharTok{+} 
+  \FunctionTok{geom\_hline}\NormalTok{(}\AttributeTok{yintercept =} \DecValTok{2}\NormalTok{, }\AttributeTok{size =} \DecValTok{1}\NormalTok{, }\AttributeTok{color =} \StringTok{\textquotesingle{}red\textquotesingle{}}\NormalTok{) }\SpecialCharTok{+} 
+  \FunctionTok{geom\_vline}\NormalTok{(}\AttributeTok{xintercept =} \DecValTok{3} \SpecialCharTok{/} \FunctionTok{nrow}\NormalTok{(Carseats), }\AttributeTok{size =} \DecValTok{1}\NormalTok{, }\AttributeTok{color =} \StringTok{\textquotesingle{}blue\textquotesingle{}}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{labs}\NormalTok{(}\AttributeTok{x =} \StringTok{\textquotesingle{}Leverage\textquotesingle{}}\NormalTok{, }\AttributeTok{y =} \StringTok{\textquotesingle{}Standardized Residual\textquotesingle{}}\NormalTok{, }\AttributeTok{title =} \StringTok{\textquotesingle{}Residuals vs Leverage\textquotesingle{}}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{02_lab_rmd_files/figure-latex/unnamed-chunk-29-1.pdf}
+
+A more quantitative approach is to use Cook's distance.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{broom}\SpecialCharTok{::}\FunctionTok{augment}\NormalTok{(lm.sales.smaller) }\SpecialCharTok{\%\textgreater{}\%}        
+\NormalTok{  tibble}\SpecialCharTok{::}\FunctionTok{rownames\_to\_column}\NormalTok{(}\StringTok{"rowid"}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%} 
+\NormalTok{  dplyr}\SpecialCharTok{::}\FunctionTok{arrange}\NormalTok{(}\FunctionTok{desc}\NormalTok{(.cooksd)) }\SpecialCharTok{\%\textgreater{}\%} 
+\NormalTok{  dplyr}\SpecialCharTok{::}\FunctionTok{select}\NormalTok{(Sales, Price, US, .std.resid, .hat, .cooksd)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## # A tibble: 400 x 6
+##    Sales Price US    .std.resid    .hat .cooksd
+##    <dbl> <dbl> <fct>      <dbl>   <dbl>   <dbl>
+##  1 14.9     82 No          2.58 0.0116   0.0261
+##  2 14.4     53 No          1.73 0.0237   0.0243
+##  3 10.6    149 No          2.32 0.0126   0.0228
+##  4 15.6     72 Yes         2.17 0.0129   0.0205
+##  5  0.37   191 Yes        -1.42 0.0286   0.0198
+##  6 16.3     92 Yes         2.87 0.00664  0.0183
+##  7  3.47    81 No         -2.10 0.0119   0.0177
+##  8  0.53   159 Yes        -2.05 0.0119   0.0169
+##  9 13.6     89 No          2.18 0.00983  0.0158
+## 10  3.02    90 Yes        -2.56 0.00710  0.0157
+## # ... with 390 more rows
+\end{verbatim}
+
+\hypertarget{exercise-11-generated-data-no-intercept}{%
+\subsection{Exercise 11: Generated Data (No
+Intercept)}\label{exercise-11-generated-data-no-intercept}}
+
+\textbf{In this problem, we will investigate the t-statistic for the
+null hypothesis \(H_0: \beta = 0\) in a simple linear regression model
+\emph{without an intercept}. To begin, we generate a predictor \(x\) and
+a response \(y\) as follows.}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{set.seed}\NormalTok{(}\DecValTok{1}\NormalTok{)}
+\NormalTok{x }\OtherTok{\textless{}{-}} \FunctionTok{rnorm}\NormalTok{(}\DecValTok{100}\NormalTok{)}
+\NormalTok{y }\OtherTok{\textless{}{-}} \DecValTok{2} \SpecialCharTok{*}\NormalTok{ x }\SpecialCharTok{+} \FunctionTok{rnorm}\NormalTok{(}\DecValTok{100}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{parta-3}{%
+\subsubsection{Part(a)}\label{parta-3}}
+
+\textbf{Predict \texttt{y} using \texttt{x} without any intercept.
+Report the coefficient estimate \(\beta_a\), the standard error of this
+coefficient estimate, and the t-statistic and p-value associated with
+the null hypothesis \(H_0 : \beta_a = 0\). Comment on these results.}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{lm.no.intercept}\FloatTok{.01} \OtherTok{\textless{}{-}} \FunctionTok{lm}\NormalTok{(y }\SpecialCharTok{\textasciitilde{}}\NormalTok{ x }\SpecialCharTok{+} \DecValTok{0}\NormalTok{)}
+\FunctionTok{summary}\NormalTok{(lm.no.intercept}\FloatTok{.01}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## Call:
+## lm(formula = y ~ x + 0)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -1.9154 -0.6472 -0.1771  0.5056  2.3109 
+## 
+## Coefficients:
+##   Estimate Std. Error t value Pr(>|t|)    
+## x   1.9939     0.1065   18.73   <2e-16 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 0.9586 on 99 degrees of freedom
+## Multiple R-squared:  0.7798, Adjusted R-squared:  0.7776 
+## F-statistic: 350.7 on 1 and 99 DF,  p-value: < 2.2e-16
+\end{verbatim}
+
+\hypertarget{comments-3}{%
+\paragraph{Comments}\label{comments-3}}
+
+\begin{itemize}
+\tightlist
+\item
+  Coefficient = 1.9939
+\item
+  Standard Error = 0.1065
+\item
+  t-statistic = 18.73
+\item
+  p-value = \textless= \(2 \times 10^{-16}\)
+\end{itemize}
+
+These statistics suggest that there is strong evidence of a relationship
+between the predictor and the response. This, in turn, means that the
+least squares line is of the form \[
+\hat{y_i} = \beta_a \times x_i = 1.9939 \times x_i 
+\] \#\#\# Part (b)
+
+\textbf{Perform a simple linear regression of \texttt{x} onto \texttt{y}
+without an intercept. Report the same information as in the previous
+question.}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{lm.no.intercept}\FloatTok{.02} \OtherTok{\textless{}{-}} \FunctionTok{lm}\NormalTok{(x }\SpecialCharTok{\textasciitilde{}}\NormalTok{ y }\SpecialCharTok{+} \DecValTok{0}\NormalTok{)}
+\FunctionTok{summary}\NormalTok{(lm.no.intercept}\FloatTok{.02}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## Call:
+## lm(formula = x ~ y + 0)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -0.8699 -0.2368  0.1030  0.2858  0.8938 
+## 
+## Coefficients:
+##   Estimate Std. Error t value Pr(>|t|)    
+## y  0.39111    0.02089   18.73   <2e-16 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 0.4246 on 99 degrees of freedom
+## Multiple R-squared:  0.7798, Adjusted R-squared:  0.7776 
+## F-statistic: 350.7 on 1 and 99 DF,  p-value: < 2.2e-16
+\end{verbatim}
+
+\hypertarget{comments-4}{%
+\paragraph{Comments}\label{comments-4}}
+
+\begin{itemize}
+\tightlist
+\item
+  Coefficient: 0.3911
+\item
+  Standard Error = 0.02089
+\item
+  t-statistic = 18.73
+\item
+  p-value = \textless= \(2\times10^{-16}\)
+\end{itemize}
+
+This regression analysis also provides significant evidence against the
+null hypothesis: there is strong evidence of a relationship between
+\(y\) and \(x\).
+
+\hypertarget{partc-2}{%
+\paragraph{Part(c)}\label{partc-2}}
+
+\textbf{What is the relationship between the results obtained in (a) and
+(b)?}
+
+\href{https://rpubs.com/lmorgan95/ISLR_CH3_Solutions}{This link} has
+some great analysis, which I will replicate here to improve my own
+understanding.
+
+Both models have the same t-statstic associated with their coefficients,
+but the values of the coefficient estimates and their standard errors
+are different.
+
+This is because in the first model, we are regressing \(y\) onto \(x\)
+and in the second model we are regressing \(x\) onto \(y\).
+
+In case of the first model, the linear relationship is
+\(y = 2x + \epsilon\). Algebraically reversing this gives us
+\(x = \frac{y - \epsilon}{2}\). In this case, we'd expect the
+coefficient to be \(\approx\) 0.5 but the regression gives us an
+estimate of 0.399, which isn't close to 0.5.
+
+This is because there are different levels of noise in the data, and
+they have different effects on the linear regression estimates.
+
+When we regress \(y\) onto \(x\), RSS =
+\(\sum\limits_i^n(y_i - \bar{y})^2\). Minimizing this \textbf{vertical
+distance} yields a slightly flatter line.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{data }\OtherTok{\textless{}{-}} \FunctionTok{data.frame}\NormalTok{(x, y)}
+
+\FunctionTok{ggplot}\NormalTok{(data, }\FunctionTok{aes}\NormalTok{(x, y)) }\SpecialCharTok{+} 
+  \FunctionTok{geom\_point}\NormalTok{(}\AttributeTok{color =} \StringTok{\textquotesingle{}red\textquotesingle{}}\NormalTok{) }\SpecialCharTok{+} 
+  \FunctionTok{geom\_segment}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ x, }\AttributeTok{y =}\NormalTok{ y, }\AttributeTok{xend =}\NormalTok{ x, }\AttributeTok{yend =}\NormalTok{ lm.no.intercept}\FloatTok{.01}\SpecialCharTok{$}\NormalTok{fitted.values)) }\SpecialCharTok{+} 
+  \FunctionTok{geom\_abline}\NormalTok{(}\AttributeTok{intercept =} \DecValTok{0}\NormalTok{, }\AttributeTok{slope =} \FunctionTok{coef}\NormalTok{(lm.no.intercept}\FloatTok{.01}\NormalTok{), }\AttributeTok{size =} \DecValTok{1}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{labs}\NormalTok{(}\AttributeTok{title =} \StringTok{\textquotesingle{}LM1 {-} Predicting \textasciigrave{}y\textasciigrave{} using \textasciigrave{}x\textasciigrave{}\textquotesingle{}}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{02_lab_rmd_files/figure-latex/unnamed-chunk-34-1.pdf}
+
+In the case of the second model, we are minimising
+\(RSS = \sum\limits_{i = 1}^N(x_i - \bar{x})^2\). This gives us a line
+with a steeper slope.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{ggplot}\NormalTok{(data, }\FunctionTok{aes}\NormalTok{(x, y)) }\SpecialCharTok{+} 
+  \FunctionTok{geom\_point}\NormalTok{(}\AttributeTok{color=}\StringTok{"red"}\NormalTok{) }\SpecialCharTok{+} 
+  \FunctionTok{geom\_segment}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ x, }\AttributeTok{y =}\NormalTok{ y,}
+                   \AttributeTok{xend =}\NormalTok{ lm.no.intercept}\FloatTok{.02}\SpecialCharTok{$}\NormalTok{fitted.values, }\AttributeTok{yend =}\NormalTok{ y)) }\SpecialCharTok{+} 
+  \FunctionTok{geom\_abline}\NormalTok{(}\AttributeTok{intercept =} \DecValTok{0}\NormalTok{, }\AttributeTok{slope =} \DecValTok{1} \SpecialCharTok{/} \FunctionTok{coef}\NormalTok{(lm.no.intercept}\FloatTok{.02}\NormalTok{), }\AttributeTok{size =} \DecValTok{1}\NormalTok{) }\SpecialCharTok{+} 
+  \FunctionTok{labs}\NormalTok{(}\AttributeTok{title =} \StringTok{"LM2: predicting x using y"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{02_lab_rmd_files/figure-latex/unnamed-chunk-35-1.pdf}
+
+As the noise in the dataset will decrease, we will see the two lines
+converge to each other.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{ggplot}\NormalTok{(data, }\FunctionTok{aes}\NormalTok{(x, y)) }\SpecialCharTok{+} 
+  \FunctionTok{geom\_point}\NormalTok{(}\AttributeTok{color=}\StringTok{"red"}\NormalTok{) }\SpecialCharTok{+} 
+  \FunctionTok{geom\_abline}\NormalTok{(}\AttributeTok{intercept =} \DecValTok{0}\NormalTok{, }\AttributeTok{slope =} \FunctionTok{coef}\NormalTok{(lm.no.intercept}\FloatTok{.01}\NormalTok{), }\AttributeTok{size =} \DecValTok{1}\NormalTok{, }\AttributeTok{col =} \StringTok{"deepskyblue3"}\NormalTok{) }\SpecialCharTok{+} 
+  \FunctionTok{geom\_abline}\NormalTok{(}\AttributeTok{intercept =} \DecValTok{0}\NormalTok{, }\AttributeTok{slope =} \DecValTok{1} \SpecialCharTok{/} \FunctionTok{coef}\NormalTok{(lm.no.intercept}\FloatTok{.02}\NormalTok{), }\AttributeTok{size =} \DecValTok{1}\NormalTok{, }\AttributeTok{col =} \StringTok{"mediumseagreen"}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{labs}\NormalTok{(}\AttributeTok{title =} \StringTok{"LM1 vs LM2"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{02_lab_rmd_files/figure-latex/unnamed-chunk-36-1.pdf}
+
+\hypertarget{exercsie-12-reverse-regression}{%
+\subsection{Exercsie 12: Reverse
+Regression}\label{exercsie-12-reverse-regression}}
+
+\hypertarget{part-a-1}{%
+\subsubsection{Part (a)}\label{part-a-1}}
+
+\textbf{Recall that the coefficient estimate \(\hat{\beta_a}\) for the
+linear regression of \(y\) onto \(x\) without an intercept is given by
+equation 3.38. Under what circumstance is the coefficient estimate for
+the regression of \(x\) onto \(y\) the same as the coefficient estimate
+for the regression of \(y\) onto \(x\)?}
+
+\[
+\hat{y} = \hat{\beta_a}x
+\\
+\hat{x} = \hat{\beta_b}y 
+\\
+\hat{\beta_a} = \frac{\sum{xy}}{\sum(x^2)}
+\\
+\hat{\beta_b} = \frac{\sum{yx}}{\sum(y^2)}
+\\
+Equating\ coefficients
+\\
+\hat{\beta_a} = \hat{\beta_b} 
+\\
+\frac{\sum xy}{\sum x^2} = \frac{\sum yx}{\sum y^2}
+\\
+\sum\limits_{i = 1}^{N} x_i^2= \sum\limits_{i = 1}^{N} y_i^2
+\]
+
+This means the coefficients of regressing \(x\) onto \(y\) and \(y\)
+onto \(x\) will be equal when the sum of squares of the predictors in
+the regression equation are the same.
+
+\hypertarget{part-b-3}{%
+\subsubsection{Part (b)}\label{part-b-3}}
+
+\textbf{Generate an example in R with \(n\) = 100 observations in which
+the coefficient estimate for the regression of \(x\) onto \(y\) is
+different from the coefficient estimate of \(y\) onto \(x\).}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# This was actually done in the previous question, but we\textquotesingle{}ll do it again.}
+\FunctionTok{set.seed}\NormalTok{(}\DecValTok{2}\NormalTok{)}
+\NormalTok{x }\OtherTok{\textless{}{-}} \FunctionTok{rnorm}\NormalTok{(}\DecValTok{100}\NormalTok{)}
+\NormalTok{y }\OtherTok{\textless{}{-}} \DecValTok{5} \SpecialCharTok{*}\NormalTok{ x }\SpecialCharTok{+} \FunctionTok{rnorm}\NormalTok{(}\DecValTok{100}\NormalTok{, }\AttributeTok{sd =} \DecValTok{2}\NormalTok{)}
+\NormalTok{data }\OtherTok{\textless{}{-}} \FunctionTok{data.frame}\NormalTok{(x, y)}
+
+\CommentTok{\# Fit regressors}
+\NormalTok{lm.y.onto.x }\OtherTok{\textless{}{-}} \FunctionTok{lm}\NormalTok{(y }\SpecialCharTok{\textasciitilde{}}\NormalTok{ x }\SpecialCharTok{+} \DecValTok{0}\NormalTok{) }
+\NormalTok{lm.x.onto.y }\OtherTok{\textless{}{-}} \FunctionTok{lm}\NormalTok{(x }\SpecialCharTok{\textasciitilde{}}\NormalTok{ y }\SpecialCharTok{+} \DecValTok{0}\NormalTok{)}
+
+\CommentTok{\# Confirm sum of squares is different}
+\NormalTok{sum.squares.x }\OtherTok{\textless{}{-}} \FunctionTok{sum}\NormalTok{(x }\SpecialCharTok{\^{}} \DecValTok{2}\NormalTok{) }
+\NormalTok{sum.squares.y }\OtherTok{\textless{}{-}} \FunctionTok{sum}\NormalTok{(y }\SpecialCharTok{\^{}} \DecValTok{2}\NormalTok{)}
+\FunctionTok{cat}\NormalTok{(}\FunctionTok{paste0}\NormalTok{(}\StringTok{"Sum of Squares of x: }\SpecialCharTok{\textbackslash{}t}\StringTok{"}\NormalTok{, }\FunctionTok{round}\NormalTok{(sum.squares.x, }\DecValTok{3}\NormalTok{), }\StringTok{" | Sum of Squares of y:}\SpecialCharTok{\textbackslash{}t}\StringTok{"}\NormalTok{, }\FunctionTok{round}\NormalTok{(sum.squares.y, }\DecValTok{3}\NormalTok{)))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Sum of Squares of x:     133.352 | Sum of Squares of y:  3591.294
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Get the coefficients for the slopes }
+\NormalTok{slope.coef.y.onto.x }\OtherTok{\textless{}{-}} \FunctionTok{coef}\NormalTok{(lm.y.onto.x)}
+\NormalTok{slope.coef.x.onto.y }\OtherTok{\textless{}{-}} \FunctionTok{coef}\NormalTok{(lm.x.onto.y)}
+\FunctionTok{cat}\NormalTok{(}\FunctionTok{paste0}\NormalTok{(}\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{Slope of y \textasciitilde{} x:}\SpecialCharTok{\textbackslash{}t}\StringTok{"}\NormalTok{, }\FunctionTok{round}\NormalTok{(slope.coef.y.onto.x, }\DecValTok{3}\NormalTok{), }\StringTok{" | Sum of Squares of x \textasciitilde{} y:}\SpecialCharTok{\textbackslash{}t}\StringTok{"}\NormalTok{, }\FunctionTok{round}\NormalTok{(slope.coef.x.onto.y, }\DecValTok{3}\NormalTok{)))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## Slope of y ~ x:  4.905 | Sum of Squares of x ~ y:    0.182
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Can also plot the lines }
+\FunctionTok{ggplot}\NormalTok{(data, }\FunctionTok{aes}\NormalTok{(x , y)) }\SpecialCharTok{+} 
+  \FunctionTok{geom\_point}\NormalTok{(}\AttributeTok{color =} \StringTok{\textquotesingle{}red\textquotesingle{}}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{geom\_abline}\NormalTok{(}\AttributeTok{intercept =} \DecValTok{0}\NormalTok{, }\AttributeTok{slope =} \FunctionTok{coef}\NormalTok{(lm.y.onto.x), }\AttributeTok{size =} \DecValTok{1}\NormalTok{, }\AttributeTok{col =} \StringTok{\textquotesingle{}deepskyblue3\textquotesingle{}}\NormalTok{) }\SpecialCharTok{+} 
+  \FunctionTok{geom\_abline}\NormalTok{(}\AttributeTok{intercept =} \DecValTok{0}\NormalTok{, }\AttributeTok{slope =} \DecValTok{1} \SpecialCharTok{/} \FunctionTok{coef}\NormalTok{(lm.x.onto.y), }\AttributeTok{size =} \DecValTok{1}\NormalTok{, }\AttributeTok{col =} \StringTok{\textquotesingle{}mediumseagreen\textquotesingle{}}\NormalTok{) }\SpecialCharTok{+} 
+  \FunctionTok{labs}\NormalTok{(}\AttributeTok{title =} \StringTok{\textquotesingle{}Regression Lines (y \textasciitilde{} x (blue) and x \textasciitilde{} y (green)))\textquotesingle{}}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{02_lab_rmd_files/figure-latex/unnamed-chunk-37-1.pdf}
+
+\hypertarget{part-c-equal-coefficients}{%
+\subsubsection{Part (c) Equal
+Coefficients}\label{part-c-equal-coefficients}}
+
+\textbf{Generate an example in R with \(n\) = 100 observations in which
+the coefficient estimate for the regression of \(x\) ont \(y\) is the
+same as the coefficient estimate for the regression of \(y\) onto
+\(x\).}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# When predictor and response variables are equal, this will always be the case }
+\FunctionTok{set.seed}\NormalTok{(}\DecValTok{3}\NormalTok{)}
+\NormalTok{x }\OtherTok{\textless{}{-}} \FunctionTok{rnorm}\NormalTok{(}\DecValTok{100}\NormalTok{)}
+\NormalTok{y }\OtherTok{\textless{}{-}}\NormalTok{ x}
+\NormalTok{data }\OtherTok{\textless{}{-}} \FunctionTok{data.frame}\NormalTok{(x, y)}
+
+\NormalTok{lm.y.onto.x }\OtherTok{\textless{}{-}} \FunctionTok{lm}\NormalTok{(y }\SpecialCharTok{\textasciitilde{}}\NormalTok{ x }\SpecialCharTok{+} \DecValTok{0}\NormalTok{)}
+\NormalTok{lm.x.onto.y }\OtherTok{\textless{}{-}} \FunctionTok{lm}\NormalTok{(x }\SpecialCharTok{\textasciitilde{}}\NormalTok{ y }\SpecialCharTok{+} \DecValTok{0}\NormalTok{)}
+
+\CommentTok{\# Confirm sum of squares is the same}
+\NormalTok{sum.squares.x }\OtherTok{\textless{}{-}} \FunctionTok{sum}\NormalTok{(x }\SpecialCharTok{\^{}} \DecValTok{2}\NormalTok{) }
+\NormalTok{sum.squares.y }\OtherTok{\textless{}{-}} \FunctionTok{sum}\NormalTok{(y }\SpecialCharTok{\^{}} \DecValTok{2}\NormalTok{)}
+\FunctionTok{cat}\NormalTok{(}\FunctionTok{paste0}\NormalTok{(}\StringTok{"Sum of Squares of x: }\SpecialCharTok{\textbackslash{}t}\StringTok{"}\NormalTok{, }\FunctionTok{round}\NormalTok{(sum.squares.x, }\DecValTok{3}\NormalTok{), }\StringTok{" | Sum of Squares of y:}\SpecialCharTok{\textbackslash{}t}\StringTok{"}\NormalTok{, }\FunctionTok{round}\NormalTok{(sum.squares.y, }\DecValTok{3}\NormalTok{)))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Sum of Squares of x:     72.566 | Sum of Squares of y:   72.566
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Get the coefficients for the slopes }
+\NormalTok{slope.coef.y.onto.x }\OtherTok{\textless{}{-}} \FunctionTok{coef}\NormalTok{(lm.y.onto.x)}
+\NormalTok{slope.coef.x.onto.y }\OtherTok{\textless{}{-}} \FunctionTok{coef}\NormalTok{(lm.x.onto.y)}
+\FunctionTok{cat}\NormalTok{(}\FunctionTok{paste0}\NormalTok{(}\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{Slope of y \textasciitilde{} x:}\SpecialCharTok{\textbackslash{}t}\StringTok{"}\NormalTok{, }\FunctionTok{round}\NormalTok{(slope.coef.y.onto.x, }\DecValTok{3}\NormalTok{), }\StringTok{" | Sum of Squares of x \textasciitilde{} y:}\SpecialCharTok{\textbackslash{}t}\StringTok{"}\NormalTok{, }\FunctionTok{round}\NormalTok{(slope.coef.x.onto.y, }\DecValTok{3}\NormalTok{)))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## Slope of y ~ x:  1 | Sum of Squares of x ~ y:    1
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Can also plot the lines }
+\FunctionTok{ggplot}\NormalTok{(data, }\FunctionTok{aes}\NormalTok{(x , y)) }\SpecialCharTok{+} 
+  \FunctionTok{geom\_point}\NormalTok{(}\AttributeTok{color =} \StringTok{\textquotesingle{}red\textquotesingle{}}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{geom\_abline}\NormalTok{(}\AttributeTok{intercept =} \DecValTok{0}\NormalTok{, }\AttributeTok{slope =} \FunctionTok{coef}\NormalTok{(lm.y.onto.x), }\AttributeTok{size =} \DecValTok{1}\NormalTok{, }\AttributeTok{col =} \StringTok{\textquotesingle{}deepskyblue3\textquotesingle{}}\NormalTok{) }\SpecialCharTok{+} 
+  \FunctionTok{geom\_abline}\NormalTok{(}\AttributeTok{intercept =} \DecValTok{0}\NormalTok{, }\AttributeTok{slope =} \DecValTok{1} \SpecialCharTok{/} \FunctionTok{coef}\NormalTok{(lm.x.onto.y), }\AttributeTok{size =} \DecValTok{1}\NormalTok{, }\AttributeTok{col =} \StringTok{\textquotesingle{}mediumseagreen\textquotesingle{}}\NormalTok{) }\SpecialCharTok{+} 
+  \FunctionTok{labs}\NormalTok{(}\AttributeTok{title =} \StringTok{\textquotesingle{}Regression Lines (y \textasciitilde{} x (blue) and x \textasciitilde{} y (green))\textquotesingle{}}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{02_lab_rmd_files/figure-latex/unnamed-chunk-38-1.pdf}
+
+\hypertarget{question-13-regression-with-simulated-data}{%
+\subsection{Question 13: Regression with Simulated
+Data}\label{question-13-regression-with-simulated-data}}
+
+\textbf{In this exercise, you will create some simulated data and will
+fit simple linear regression models to it.}
+
+\hypertarget{part-a-2}{%
+\subsubsection{Part (a)}\label{part-a-2}}
+
+\textbf{Using the \texttt{rnorm} function, create a vector \(x\)
+containing 100 observations drawn from
+\(\mathcal{N}(0, 1) distribution.\)}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{set.seed}\NormalTok{(}\DecValTok{1}\NormalTok{)}
+\NormalTok{x }\OtherTok{\textless{}{-}} \FunctionTok{rnorm}\NormalTok{(}\DecValTok{100}\NormalTok{, }\AttributeTok{mean =} \DecValTok{0}\NormalTok{, }\AttributeTok{sd =} \DecValTok{1}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{part-b-4}{%
+\subsubsection{Part (b)}\label{part-b-4}}
+
+\textbf{Using the \texttt{rnorm} function, create a vector \texttt{eps}
+containing 100 observations drawn from a \(\mathcal{N}(0, 0.25)\)
+distribution i.e.~a normal distribution with mean zeor and variance
+0.25.}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{eps }\OtherTok{\textless{}{-}} \FunctionTok{rnorm}\NormalTok{(}\DecValTok{100}\NormalTok{, }\AttributeTok{mean =} \DecValTok{0}\NormalTok{, }\AttributeTok{sd =} \FunctionTok{sqrt}\NormalTok{(}\FloatTok{0.25}\NormalTok{)) }\CommentTok{\# variance = sd \^{} 2}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{part-c-3}{%
+\subsubsection{Part (c)}\label{part-c-3}}
+
+\textbf{Using \texttt{x} and \texttt{eps}, generate a vector \texttt{y}
+according to the model \(y = -1 + 0.5x + \epsilon\). What is the length
+of the vector \(y\)? What are the values of \(\beta_0\) and \(\beta_1\)
+in this linear model?}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Creating target}
+\NormalTok{y }\OtherTok{\textless{}{-}} \SpecialCharTok{{-}}\DecValTok{1} \SpecialCharTok{+} \FloatTok{0.5} \SpecialCharTok{*}\NormalTok{ x }\SpecialCharTok{+}\NormalTok{ eps}
+
+\CommentTok{\# Confirming that 100 elements created}
+\FunctionTok{length}\NormalTok{(y) }\SpecialCharTok{==} \FunctionTok{length}\NormalTok{(x) }\SpecialCharTok{\&} \FunctionTok{length}\NormalTok{(y) }\SpecialCharTok{==} \FunctionTok{length}\NormalTok{(eps)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] TRUE
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# True parameters are B\_0 = {-}1 and B\_1 = {-}1}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{part-d-1}{%
+\subsubsection{Part (d)}\label{part-d-1}}
+
+\textbf{Create a scatterplot displaying the relationship between
+\texttt{x} and \texttt{y}. Comment on what you observe.}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{data }\OtherTok{\textless{}{-}} \FunctionTok{data.frame}\NormalTok{(}\AttributeTok{x =}\NormalTok{ x, }\AttributeTok{y =}\NormalTok{ y)}
+\FunctionTok{ggplot}\NormalTok{(data, }\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ x, }\AttributeTok{y =}\NormalTok{ y)) }\SpecialCharTok{+} \FunctionTok{geom\_point}\NormalTok{()}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{02_lab_rmd_files/figure-latex/unnamed-chunk-42-1.pdf}
+
+\begin{itemize}
+\tightlist
+\item
+  Positive linear relationship, as \texttt{x} increases, \texttt{y} also
+  increases.
+\item
+  There is a lot of noise/spread in the data, so I expect RSE to be high
+  for a linear model.
+\item
+  Intercept \(\approx\) -1 and slope \(\approx\) -5, as expected.
+\end{itemize}
+
+\hypertarget{part-e}{%
+\subsubsection{Part (e)}\label{part-e}}
+
+\textbf{Fit a least squares linear model to predict \texttt{y} using
+\texttt{x}. Comment on the model obtained. How do \(\hat{\beta_0}\) and
+\(\hat{\beta_1}\) compare to \(\beta_0\) and \(\beta_1\)?}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{lm.simulated }\OtherTok{\textless{}{-}} \FunctionTok{lm}\NormalTok{(y }\SpecialCharTok{\textasciitilde{}}\NormalTok{ x, }\AttributeTok{data =}\NormalTok{ data)}
+\FunctionTok{summary}\NormalTok{(lm.simulated)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## Call:
+## lm(formula = y ~ x, data = data)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -0.93842 -0.30688 -0.06975  0.26970  1.17309 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(>|t|)    
+## (Intercept) -1.01885    0.04849 -21.010  < 2e-16 ***
+## x            0.49947    0.05386   9.273 4.58e-15 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 0.4814 on 98 degrees of freedom
+## Multiple R-squared:  0.4674, Adjusted R-squared:  0.4619 
+## F-statistic: 85.99 on 1 and 98 DF,  p-value: 4.583e-15
+\end{verbatim}
+
+The slope and intercept coefficients are very close to the actual
+values. The deviations are primarily due to the noise in the data.
+p-values associated with both coefficients are practically 0, so we have
+no reason to believe these associations are due to chance (as expected).
+
+However, the \(R^2\) is low and \(RSS\) is relatively high - this is due
+to the noise in the data.
+
+\hypertarget{part-f}{%
+\subsubsection{Part (f)}\label{part-f}}
+
+\textbf{Display the least squares line on the scatterplot obtained in
+(d). Draw the population regression line in the plot with a different
+color.}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{g1 }\OtherTok{\textless{}{-}} \FunctionTok{ggplot}\NormalTok{(data, }\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ x, }\AttributeTok{y =}\NormalTok{ y)) }\SpecialCharTok{+} 
+  \FunctionTok{geom\_point}\NormalTok{()}
+
+\NormalTok{g1 }\SpecialCharTok{+} 
+  \FunctionTok{geom\_abline}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{intercept =} \SpecialCharTok{{-}}\DecValTok{1}\NormalTok{, }\AttributeTok{slope =} \FloatTok{0.5}\NormalTok{, }\AttributeTok{col =} \StringTok{"Population"}\NormalTok{)) }\SpecialCharTok{+} 
+  \FunctionTok{geom\_abline}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{intercept =} \FunctionTok{coef}\NormalTok{(lm.simulated)[}\DecValTok{1}\NormalTok{], }\AttributeTok{slope =} \FunctionTok{coef}\NormalTok{(lm.simulated)[}\DecValTok{2}\NormalTok{], }\AttributeTok{col =} \StringTok{"Least Squares"}\NormalTok{)) }\SpecialCharTok{+} 
+  \FunctionTok{scale\_colour\_manual}\NormalTok{(}\AttributeTok{name =} \StringTok{"Regression Line:"}\NormalTok{, }\AttributeTok{values =} \FunctionTok{c}\NormalTok{(}\StringTok{"red"}\NormalTok{, }\StringTok{"blue"}\NormalTok{)) }\SpecialCharTok{+}
+  \FunctionTok{theme}\NormalTok{(}\AttributeTok{legend.position =} \StringTok{"bottom"}\NormalTok{) }\SpecialCharTok{+} 
+  \FunctionTok{labs}\NormalTok{(}\AttributeTok{title =} \StringTok{"sd(eps) = 0.5"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{02_lab_rmd_files/figure-latex/unnamed-chunk-44-1.pdf}
+
+\hypertarget{part-g-1}{%
+\subsubsection{Part (g)}\label{part-g-1}}
+
+\textbf{Now fit a polynomial regression model that predicts \texttt{y}
+using \texttt{x} and \texttt{x\^{}2}. Is there evidence that the
+quadratic term improves the model fit?}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{lm.simulated.quad }\OtherTok{\textless{}{-}} \FunctionTok{lm}\NormalTok{(y }\SpecialCharTok{\textasciitilde{}}\NormalTok{ x }\SpecialCharTok{+} \FunctionTok{I}\NormalTok{(x}\SpecialCharTok{\^{}}\DecValTok{2}\NormalTok{), }\AttributeTok{data =}\NormalTok{ data)}
+\FunctionTok{summary}\NormalTok{(lm.simulated.quad)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## Call:
+## lm(formula = y ~ x + I(x^2), data = data)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -0.98252 -0.31270 -0.06441  0.29014  1.13500 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(>|t|)    
+## (Intercept) -0.97164    0.05883 -16.517  < 2e-16 ***
+## x            0.50858    0.05399   9.420  2.4e-15 ***
+## I(x^2)      -0.05946    0.04238  -1.403    0.164    
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 0.479 on 97 degrees of freedom
+## Multiple R-squared:  0.4779, Adjusted R-squared:  0.4672 
+## F-statistic:  44.4 on 2 and 97 DF,  p-value: 2.038e-14
+\end{verbatim}
+
+\hypertarget{comments-5}{%
+\paragraph{Comments}\label{comments-5}}
+
+\begin{itemize}
+\tightlist
+\item
+  The p-value for the quadratic term is 0.164, which is far above the
+  0.05 threshold for significance.
+\item
+  This suggests there is no statistically significant relationship
+  between the response and the quadratic predictor.
+\item
+  This makes sense because the data itself was simulated using a linear
+  equation, and the quadratic predictor is most likely overfitting to
+  noise \(\epsilon\).
+\item
+  The adjusted \(R^2\) is slightly higher wth the quadratic estimator,
+  but this is expected because the residual standard error has also
+  decreased slightly.
+\end{itemize}
+
+\hypertarget{part-h-1}{%
+\subsubsection{Part (h)}\label{part-h-1}}
+
+\textbf{Repeat parts (a) to (f) after modfying the data generation
+process in such a way that there is \emph{less} noise in the data. The
+model (3.39) should remain the same.}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Replicating code from above but with a smaller variance {-} standard linear model}
+\FunctionTok{set.seed}\NormalTok{(}\DecValTok{1}\NormalTok{)}
+\NormalTok{x }\OtherTok{\textless{}{-}} \FunctionTok{rnorm}\NormalTok{(}\DecValTok{100}\NormalTok{)}
+\NormalTok{eps }\OtherTok{\textless{}{-}} \FunctionTok{rnorm}\NormalTok{(}\DecValTok{100}\NormalTok{, }\AttributeTok{sd =} \FloatTok{0.1}\NormalTok{)   }\CommentTok{\# Now 0.1 instead of 0.5}
+\NormalTok{y }\OtherTok{\textless{}{-}} \SpecialCharTok{{-}}\DecValTok{1} \SpecialCharTok{+} \FloatTok{0.5}\SpecialCharTok{*}\NormalTok{x }\SpecialCharTok{+}\NormalTok{ eps}
+\NormalTok{data }\OtherTok{\textless{}{-}} \FunctionTok{data.frame}\NormalTok{(x, y)}
+
+\NormalTok{lm.simulated.low.var }\OtherTok{\textless{}{-}} \FunctionTok{lm}\NormalTok{(y }\SpecialCharTok{\textasciitilde{}}\NormalTok{ x)}
+
+\FunctionTok{ggplot}\NormalTok{(data, }\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ x, }\AttributeTok{y =}\NormalTok{ y)) }\SpecialCharTok{+} 
+  \FunctionTok{geom\_point}\NormalTok{() }\SpecialCharTok{+} 
+  \FunctionTok{geom\_abline}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{intercept =} \SpecialCharTok{{-}}\DecValTok{1}\NormalTok{, }\AttributeTok{slope =} \FloatTok{0.5}\NormalTok{, }\AttributeTok{col =} \StringTok{"Population"}\NormalTok{)) }\SpecialCharTok{+} 
+  \FunctionTok{geom\_abline}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{intercept =} \FunctionTok{coef}\NormalTok{(lm.simulated.low.var)[}\DecValTok{1}\NormalTok{], }
+                  \AttributeTok{slope =} \FunctionTok{coef}\NormalTok{(lm.simulated.low.var)[}\DecValTok{2}\NormalTok{], }\AttributeTok{col =} \StringTok{"Least Squares"}\NormalTok{)) }\SpecialCharTok{+} 
+  \FunctionTok{scale\_colour\_manual}\NormalTok{(}\AttributeTok{name =} \StringTok{"Regression Line:"}\NormalTok{, }\AttributeTok{values =} \FunctionTok{c}\NormalTok{(}\StringTok{"red"}\NormalTok{, }\StringTok{"blue"}\NormalTok{)) }\SpecialCharTok{+}
+  \FunctionTok{theme}\NormalTok{(}\AttributeTok{legend.position =} \StringTok{"bottom"}\NormalTok{) }\SpecialCharTok{+} 
+  \FunctionTok{labs}\NormalTok{(}\AttributeTok{title =} \StringTok{"sd(eps) = 0.1"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{02_lab_rmd_files/figure-latex/unnamed-chunk-46-1.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{summary}\NormalTok{(lm.simulated.low.var)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## Call:
+## lm(formula = y ~ x)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -0.18768 -0.06138 -0.01395  0.05394  0.23462 
+## 
+## Coefficients:
+##              Estimate Std. Error t value Pr(>|t|)    
+## (Intercept) -1.003769   0.009699  -103.5   <2e-16 ***
+## x            0.499894   0.010773    46.4   <2e-16 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 0.09628 on 98 degrees of freedom
+## Multiple R-squared:  0.9565, Adjusted R-squared:  0.956 
+## F-statistic:  2153 on 1 and 98 DF,  p-value: < 2.2e-16
+\end{verbatim}
+
+\hypertarget{comments-6}{%
+\paragraph{Comments}\label{comments-6}}
+
+\begin{itemize}
+\tightlist
+\item
+  There is less spread in the data.
+\item
+  Population and least squares lines are almost identical because the
+  intercept is practically the same, and the slope estimate improves
+  ever so slightly.
+\item
+  The adjusted \(R^2\) statistic has improved from 0.4672 to 0.956, and
+  RSE has decreased substantially to 0.09628.
+\item
+  p-value associated with the coefficients still shows significance.
+\end{itemize}
+
+\hypertarget{part-i}{%
+\subsubsection{Part (i)}\label{part-i}}
+
+\textbf{Repeat parts (a) to (f) after modfying the data generation
+process in such a way that there is \emph{more} noise in the data. The
+model (3.39) should remain the same.}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{set.seed}\NormalTok{(}\DecValTok{1}\NormalTok{)}
+\NormalTok{x }\OtherTok{\textless{}{-}} \FunctionTok{rnorm}\NormalTok{(}\DecValTok{100}\NormalTok{)}
+\NormalTok{eps }\OtherTok{\textless{}{-}} \FunctionTok{rnorm}\NormalTok{(}\DecValTok{100}\NormalTok{, }\AttributeTok{sd =} \FloatTok{0.9}\NormalTok{)   }\CommentTok{\# Now 0.1 instead of 0.5}
+\NormalTok{y }\OtherTok{\textless{}{-}} \SpecialCharTok{{-}}\DecValTok{1} \SpecialCharTok{+} \FloatTok{0.5}\SpecialCharTok{*}\NormalTok{x }\SpecialCharTok{+}\NormalTok{ eps}
+\NormalTok{data }\OtherTok{\textless{}{-}} \FunctionTok{data.frame}\NormalTok{(x, y)}
+
+\NormalTok{lm.simulated.high.var }\OtherTok{\textless{}{-}} \FunctionTok{lm}\NormalTok{(y }\SpecialCharTok{\textasciitilde{}}\NormalTok{ x)}
+
+\FunctionTok{ggplot}\NormalTok{(data, }\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ x, }\AttributeTok{y =}\NormalTok{ y)) }\SpecialCharTok{+} 
+  \FunctionTok{geom\_point}\NormalTok{() }\SpecialCharTok{+} 
+  \FunctionTok{geom\_abline}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{intercept =} \SpecialCharTok{{-}}\DecValTok{1}\NormalTok{, }\AttributeTok{slope =} \FloatTok{0.5}\NormalTok{, }\AttributeTok{col =} \StringTok{"Population"}\NormalTok{)) }\SpecialCharTok{+} 
+  \FunctionTok{geom\_abline}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{intercept =} \FunctionTok{coef}\NormalTok{(lm.simulated.high.var)[}\DecValTok{1}\NormalTok{], }
+                  \AttributeTok{slope =} \FunctionTok{coef}\NormalTok{(lm.simulated.high.var)[}\DecValTok{2}\NormalTok{], }\AttributeTok{col =} \StringTok{"Least Squares"}\NormalTok{)) }\SpecialCharTok{+} 
+  \FunctionTok{scale\_colour\_manual}\NormalTok{(}\AttributeTok{name =} \StringTok{"Regression Line:"}\NormalTok{, }\AttributeTok{values =} \FunctionTok{c}\NormalTok{(}\StringTok{"red"}\NormalTok{, }\StringTok{"blue"}\NormalTok{)) }\SpecialCharTok{+}
+  \FunctionTok{theme}\NormalTok{(}\AttributeTok{legend.position =} \StringTok{"bottom"}\NormalTok{) }\SpecialCharTok{+} 
+  \FunctionTok{labs}\NormalTok{(}\AttributeTok{title =} \StringTok{"sd(eps) = 0.1"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{02_lab_rmd_files/figure-latex/unnamed-chunk-47-1.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{summary}\NormalTok{(lm.simulated.high.var)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## Call:
+## lm(formula = y ~ x)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -1.6892 -0.5524 -0.1255  0.4855  2.1116 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(>|t|)    
+## (Intercept) -1.03392    0.08729 -11.845  < 2e-16 ***
+## x            0.49905    0.09695   5.147 1.36e-06 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 0.8665 on 98 degrees of freedom
+## Multiple R-squared:  0.2128, Adjusted R-squared:  0.2048 
+## F-statistic: 26.49 on 1 and 98 DF,  p-value: 1.362e-06
+\end{verbatim}
+
+\hypertarget{comments-7}{%
+\paragraph{Comments}\label{comments-7}}
+
+\begin{itemize}
+\tightlist
+\item
+  As expected, adjusted R-squared and RSE have both become worse.
+\item
+  This is because of additional noise in the dataset.
+\end{itemize}
+
+\hypertarget{part-j}{%
+\subsubsection{Part (j)}\label{part-j}}
+
+\textbf{What are the confidence intervals for \(\beta_0\), \(\beta_1\)
+based on the original dataset, the dataset with less noise, and the
+dataset with more noise?}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# For the original model}
+\FunctionTok{confint}\NormalTok{(lm.simulated)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##                  2.5 %     97.5 %
+## (Intercept) -1.1150804 -0.9226122
+## x            0.3925794  0.6063602
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# For the model with low variance }
+\FunctionTok{confint}\NormalTok{(lm.simulated.low.var)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##                  2.5 %     97.5 %
+## (Intercept) -1.0230161 -0.9845224
+## x            0.4785159  0.5212720
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# For the model with high variance }
+\FunctionTok{confint}\NormalTok{(lm.simulated.high.var)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##                  2.5 %     97.5 %
+## (Intercept) -1.2071447 -0.8607020
+## x            0.3066429  0.6914484
+\end{verbatim}
+
+\hypertarget{comments-8}{%
+\paragraph{Comments}\label{comments-8}}
+
+\begin{itemize}
+\tightlist
+\item
+  None of the confidence intervals for \(\beta_0\) or \(\beta_1\)
+  contain zero which further corroborates our assumption that there is a
+  relationship between the predictor and response.
+\item
+  Intervals are wider for models fit to data with more variance/noise.
+\item
+  Estimates are still very close to their true values.
+\end{itemize}
+
+\end{document}
