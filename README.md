@@ -12,8 +12,7 @@ I worked through the book in early 2022, and some files are missing. I have adde
 | Chapter No.   | Chapter Title | Examples  | Exercises  | 
 |:-------------:|:------------- |:-------:  |:----------: |
 | 2             | Statistical Learning|[Code](code/02_lab_rmd.Rmd)|[HTML](html/02_exercsises.html)|
-| 3             | Linear Regression|[HTML](html/03_lab.html)
-|[HTML](html/03_exercises.html)|
+| 3             | Linear Regression|[HTML](html/03_lab.html)|[HTML](html/03_exercises.html)|
 | 4             | Classification| Can't find file | Can't find file |
 | 5             | Resampling Methods|[HTML](html/05_lab.html)|[HTML](html/05_exercises.html)|
 | 6             | Linear Model Selection & Regularization|[HTML](html/06_lab.html)|[HTML](html/06_exercises.html)|
